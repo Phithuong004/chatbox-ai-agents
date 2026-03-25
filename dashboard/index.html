@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8"/>
+  <title>AI Chat SaaS - Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;color:#1e293b}
+    .container{max-width:1000px;margin:0 auto;padding:24px 16px}
+    h1{font-size:24px;font-weight:700;margin-bottom:4px}
+    .subtitle{color:#64748b;font-size:14px;margin-bottom:0}
+    .card{background:#fff;border-radius:16px;border:1px solid #e2e8f0;padding:24px;margin-bottom:20px}
+    .card h2{font-size:16px;font-weight:600;margin-bottom:16px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .form-full{grid-column:1/-1}
+    label{font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:4px}
+    input,textarea,select{width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;
+      font-size:14px;outline:none;font-family:inherit;transition:border-color .2s}
+    input:focus,textarea:focus,select:focus{border-color:#2563eb}
+    textarea{resize:vertical;min-height:80px}
+    .btn{background:#2563eb;color:#fff;border:none;border-radius:8px;padding:10px 20px;
+      font-size:14px;font-weight:600;cursor:pointer;transition:opacity .2s;display:inline-block;text-decoration:none}
+    .btn:hover{opacity:.88}
+    .btn-sm{padding:6px 14px;font-size:13px}
+    .btn-danger{background:#ef4444}
+    .btn-warning{background:#f59e0b}
+    .btn-success{background:#16a34a}
+    .btn-outline{background:transparent;border:1.5px solid #2563eb;color:#2563eb}
+    .btn-outline:hover{background:#eff6ff;opacity:1}
+    .btn-gray{background:#64748b}
+    .alert{padding:12px 16px;border-radius:8px;font-size:14px;margin-bottom:16px}
+    .alert-error{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
+    .alert-success{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0}
+    .bot-card{border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:12px}
+    .bot-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .bot-name{font-weight:600;font-size:15px}
+    .bot-id{font-size:11px;color:#94a3b8;font-family:monospace}
+    .script-box{background:#0f172a;color:#a5f3fc;padding:14px;border-radius:8px;
+      font-family:monospace;font-size:12px;line-height:1.6;white-space:pre-wrap;
+      margin:10px 0;position:relative;overflow-x:auto}
+    .copy-btn{position:absolute;top:8px;right:8px;background:#334155;color:#fff;
+      border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer}
+    .copy-btn:hover{background:#475569}
+    .tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid #e2e8f0}
+    .tab{padding:10px 20px;cursor:pointer;font-size:14px;font-weight:500;color:#64748b;
+      border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .2s,border-color .2s}
+    .tab.active{color:#2563eb;border-bottom-color:#2563eb}
+    .tab-content{display:none}
+    .tab-content.active{display:block}
+    .tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+    .tag-active{background:#dcfce7;color:#16a34a}
+    .tag-inactive{background:#fee2e2;color:#dc2626}
+    .tag-operator{background:#fef9c3;color:#ca8a04}
+    .flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    #auth-section{display:block}
+    #app-section{display:none}
+    .nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+    .user-info{font-size:13px;color:#64748b}
+
+    /* ===== LIVE AGENT ===== */
+    .agent-layout{display:grid;grid-template-columns:280px 1fr;gap:16px;min-height:500px}
+    .session-list{border:1px solid #e2e8f0;border-radius:12px;overflow:hidden}
+    .session-list-header{background:#f8fafc;padding:12px 16px;font-size:13px;font-weight:600;
+      border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between}
+    .session-item{padding:12px 16px;border-bottom:1px solid #f1f5f9;cursor:pointer;transition:background .15s}
+    .session-item:hover{background:#f8fafc}
+    .session-item.active{background:#eff6ff;border-left:3px solid #2563eb}
+    .session-item.operator{border-left:3px solid #f59e0b}
+    .session-name{font-size:13px;font-weight:600;color:#1e293b}
+    .session-preview{font-size:12px;color:#94a3b8;margin-top:2px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+    .session-time{font-size:10px;color:#cbd5e1}
+    .chat-panel{border:1px solid #e2e8f0;border-radius:12px;display:flex;flex-direction:column}
+    .chat-panel-header{padding:14px 16px;border-bottom:1px solid #e2e8f0;
+      display:flex;align-items:center;justify-content:space-between;background:#f8fafc;border-radius:12px 12px 0 0}
+    .chat-panel-messages{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;
+      gap:8px;min-height:340px;max-height:400px}
+    .chat-panel-foot{padding:12px 16px;border-top:1px solid #e2e8f0;display:flex;gap:8px}
+    .msg-bubble{max-width:80%;padding:8px 12px;border-radius:12px;font-size:13px;line-height:1.5}
+    .msg-user{background:#f1f5f9;color:#1e293b;align-self:flex-start}
+    .msg-assistant{background:#eff6ff;color:#1e293b;align-self:flex-start;border-left:3px solid #2563eb}
+    .msg-operator{background:#fef9c3;color:#1e293b;align-self:flex-end;border-right:3px solid #f59e0b}
+    .msg-label{font-size:10px;color:#94a3b8;margin-bottom:2px}
+    .contact-card{background:#f8fafc;border-radius:8px;padding:12px;font-size:13px;margin-bottom:12px}
+    .contact-card .contact-row{display:flex;gap:6px;margin-bottom:4px;align-items:center}
+    .contact-card .contact-label{font-weight:600;color:#64748b;min-width:60px;font-size:12px}
+    .online-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;margin-right:4px}
+    .no-session{display:flex;align-items:center;justify-content:center;flex:1;
+      color:#94a3b8;font-size:14px;flex-direction:column;gap:8px;min-height:340px}
+
+    /* ===== FLOWS ===== */
+    .flow-card{border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:12px}
+    .flow-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .node-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+    .node-item{border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;
+      display:flex;align-items:center;gap:10px;background:#f8fafc}
+    .node-type{font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase}
+    .node-trigger{background:#fef3c7;color:#d97706}
+    .node-message{background:#dcfce7;color:#16a34a}
+    .node-collect{background:#dbeafe;color:#1d4ed8}
+    .node-ai{background:#f3e8ff;color:#7c3aed}
+    .flow-builder{background:#f8fafc;border-radius:12px;padding:20px;margin-top:16px}
+    .node-add-btn{border:2px dashed #e2e8f0;border-radius:8px;padding:10px;text-align:center;
+      cursor:pointer;font-size:13px;color:#94a3b8;transition:border-color .2s}
+    .node-add-btn:hover{border-color:#2563eb;color:#2563eb}
+
+    /* ===== CONTACTS ===== */
+    .contacts-table{width:100%;border-collapse:collapse;font-size:13px}
+    .contacts-table th{text-align:left;padding:10px 12px;border-bottom:2px solid #e2e8f0;
+      font-weight:600;color:#64748b;font-size:12px}
+    .contacts-table td{padding:10px 12px;border-bottom:1px solid #f1f5f9;color:#1e293b}
+    .contacts-table tr:hover td{background:#f8fafc}
+    .empty-state{text-align:center;padding:40px;color:#94a3b8;font-size:14px}
+
+    /* Bot selector */
+    .bot-selector{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+    .bot-selector select{max-width:280px;padding:8px 12px}
+
+    @media(max-width:640px){
+      .agent-layout{grid-template-columns:1fr}
+      .form-grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ===== AUTH ===== -->
+  <div id="auth-section">
+    <h1>🤖 AI Chat SaaS</h1>
+    <p class="subtitle" style="margin-bottom:28px">Tạo chat widget AI cho website của bạn</p>
+    <div class="card" style="max-width:420px">
+      <div class="tabs">
+        <div class="tab active" onclick="switchAuthTab('login')">Đăng nhập</div>
+        <div class="tab" onclick="switchAuthTab('register')">Đăng ký</div>
+      </div>
+      <div id="auth-alert"></div>
+      <div id="tab-login" class="tab-content active">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div><label>Email</label><input type="email" id="login-email" placeholder="email@example.com"/></div>
+          <div><label>Mật khẩu</label><input type="password" id="login-password" placeholder="••••••••"/></div>
+          <button class="btn" onclick="login()">Đăng nhập</button>
+        </div>
+      </div>
+      <div id="tab-register" class="tab-content">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div><label>Email</label><input type="email" id="reg-email" placeholder="email@example.com"/></div>
+          <div><label>Mật khẩu (≥8 ký tự)</label><input type="password" id="reg-password" placeholder="••••••••"/></div>
+          <button class="btn" onclick="register()">Tạo tài khoản</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== APP ===== -->
+  <div id="app-section">
+    <div class="nav">
+      <div>
+        <h1>🤖 AI Chat SaaS</h1>
+        <p class="subtitle" id="user-email-display"></p>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="logout()">Đăng xuất</button>
+    </div>
+
+    <!-- MAIN TABS -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchMainTab('bots')">🤖 Bots</div>
+      <div class="tab" onclick="switchMainTab('agent')">👤 Live Agent</div>
+      <div class="tab" onclick="switchMainTab('flows')">⚡ Flows</div>
+      <div class="tab" onclick="switchMainTab('contacts')">📋 Contacts</div>
+    </div>
+
+    <!-- ===== TAB: BOTS ===== -->
+    <div id="main-bots" class="tab-content active">
+      <div class="card">
+        <h2>➕ Tạo bot mới</h2>
+        <div id="bot-alert"></div>
+        <div class="form-grid">
+          <div>
+            <label>Tên bot *</label>
+            <input id="b-name" placeholder="VD: Tư vấn bán hàng"/>
+          </div>
+          <div>
+            <label>Model AI</label>
+            <select id="b-model">
+              <option value="gpt-4o-mini">GPT-4o Mini (nhanh, rẻ)</option>
+              <option value="gpt-4o">GPT-4o (mạnh hơn)</option>
+            </select>
+          </div>
+          <div class="form-full">
+            <label>System Prompt * (tính cách, nhiệm vụ bot)</label>
+            <textarea id="b-prompt" placeholder="VD: Bạn là nhân viên tư vấn của Shop ABC, chuyên về giày thể thao. Trả lời thân thiện, ngắn gọn bằng tiếng Việt."></textarea>
+          </div>
+          <div>
+            <label>Màu chính</label>
+            <input type="color" id="b-color" value="#2563eb" style="height:42px;padding:4px"/>
+          </div>
+          <div>
+            <label>Icon bot</label>
+            <input id="b-avatar" value="🤖"/>
+          </div>
+          <div class="form-full">
+            <label>Tin nhắn chào</label>
+            <input id="b-welcome" value="Xin chào! 👋 Tôi có thể giúp gì cho bạn?"/>
+          </div>
+          <div class="form-full">
+            <label>ℹ️ Thông tin doanh nghiệp (để bot tự động sales)</label>
+            <textarea id="b-bizinfo" rows="5" placeholder="Tên công ty: Công ty ABC&#10;Dịch vụ: Thiết kế website, SEO, quảng cáo&#10;Hotline: 0901 234 567&#10;Zalo: 0901 234 567&#10;Email: contact@abc.com&#10;Địa chỉ: 123 Nguyễn Văn Linh, Q.7, HCM&#10;Ưu đãi: Giảm 20% khách hàng mới"></textarea>
+            <p style="font-size:12px;color:#94a3b8;margin-top:4px">💡 Bot sẽ tự nhiên dẫn dắt sales khi khách hỏi về dịch vụ/liên hệ.</p>
+          </div>
+          <div>
+            <label>Vị trí widget</label>
+            <select id="b-position">
+              <option value="right">Góc phải</option>
+              <option value="left">Góc trái</option>
+            </select>
+          </div>
+          <div>
+            <label>Max tokens</label>
+            <input type="number" id="b-tokens" value="500" min="100" max="2000"/>
+          </div>
+        </div>
+        <div style="margin-top:16px">
+          <button class="btn" onclick="createBot()">🚀 Tạo bot & lấy script</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📋 Danh sách bot của bạn</h2>
+        <div id="bots-list"><p style="color:#94a3b8;font-size:14px">Đang tải...</p></div>
+      </div>
+    </div>
+
+    <!-- ===== TAB: LIVE AGENT ===== -->
+    <div id="main-agent" class="tab-content">
+      <div class="card" style="padding-bottom:8px">
+        <h2>👤 Live Agent — Trả lời thay AI</h2>
+        <div class="bot-selector">
+          <label style="margin:0;white-space:nowrap">Chọn bot:</label>
+          <select id="agent-bot-select" onchange="initAgentSocket()">
+            <option value="">-- Chọn bot --</option>
+          </select>
+          <span id="agent-status" style="font-size:13px;color:#94a3b8"></span>
+        </div>
+      </div>
+
+      <div class="agent-layout">
+        <!-- Session list -->
+        <div class="session-list">
+          <div class="session-list-header">
+            <span>💬 Cuộc trò chuyện</span>
+            <span id="session-count" style="font-size:12px;color:#94a3b8">0</span>
+          </div>
+          <div id="session-list-body">
+            <div style="padding:20px;text-align:center;color:#94a3b8;font-size:13px">
+              Chọn bot để xem sessions
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat panel -->
+        <div class="chat-panel">
+          <div class="chat-panel-header">
+            <div>
+              <div id="cp-title" style="font-weight:600;font-size:14px">Chọn một cuộc trò chuyện</div>
+              <div id="cp-contact" style="font-size:12px;color:#64748b;margin-top:2px"></div>
+            </div>
+            <div class="flex" id="cp-actions" style="display:none!important"></div>
+          </div>
+          <div class="chat-panel-messages" id="cp-messages">
+            <div class="no-session">
+              <span style="font-size:32px">💬</span>
+              <span>Chọn session để xem và trả lời</span>
+            </div>
+          </div>
+          <div class="chat-panel-foot" id="cp-foot" style="display:none">
+            <input id="agent-input" placeholder="Nhập tin nhắn với tư cách nhân viên..." 
+              onkeydown="if(event.key==='Enter')sendAgentMsg()"
+              style="flex:1"/>
+            <button class="btn btn-sm btn-warning" onclick="releaseSession()" title="Trả về cho AI">🤖 Trả AI</button>
+            <button class="btn btn-sm" onclick="sendAgentMsg()">Gửi</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB: FLOWS ===== -->
+    <div id="main-flows" class="tab-content">
+      <div class="card">
+        <h2>⚡ Flow Builder — Tự động hóa hội thoại</h2>
+        <div class="bot-selector">
+          <label style="margin:0;white-space:nowrap">Chọn bot:</label>
+          <select id="flow-bot-select" onchange="loadFlows()">
+            <option value="">-- Chọn bot --</option>
+          </select>
+        </div>
+        <div id="flow-alert"></div>
+
+        <!-- Tạo flow mới -->
+        <div id="flow-creator" style="display:none">
+          <div style="display:flex;gap:10px;margin-bottom:16px;align-items:flex-end">
+            <div style="flex:1"><label>Tên flow mới</label><input id="fl-name" placeholder="VD: Flow đặt lịch hẹn"/></div>
+            <button class="btn btn-sm" onclick="createFlow()">➕ Tạo Flow</button>
+          </div>
+        </div>
+
+        <div id="flows-list"><p style="color:#94a3b8;font-size:14px">Chọn bot để xem flows.</p></div>
+      </div>
+    </div>
+
+    <!-- ===== TAB: CONTACTS ===== -->
+    <div id="main-contacts" class="tab-content">
+      <div class="card">
+        <h2>📋 Contacts — Thông tin khách thu thập được</h2>
+        <div class="bot-selector">
+          <label style="margin:0;white-space:nowrap">Chọn bot:</label>
+          <select id="contacts-bot-select" onchange="loadContacts()">
+            <option value="">-- Chọn bot --</option>
+          </select>
+        </div>
+        <div id="contacts-table-wrap">
+          <p style="color:#94a3b8;font-size:14px">Chọn bot để xem contacts.</p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /app-section -->
+</div><!-- /container -->
+
+<script>
+const API = window.location.origin;
+let token = localStorage.getItem('ai_saas_token');
+let userEmail = localStorage.getItem('ai_saas_email');
+let allBots = [];
+let agentSocket = null;
+let currentSessionId = null;
+let currentAgentBotId = null;
+
+if (token) showApp();
+
+// ===== AUTH =====
+function showApp() {
+  document.getElementById('auth-section').style.display = 'none';
+  document.getElementById('app-section').style.display = 'block';
+  document.getElementById('user-email-display').textContent = userEmail || '';
+  loadBots();
+}
+
+function alert_(id, msg, type='error') {
+  const el = document.getElementById(id);
+  el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+  setTimeout(() => el.innerHTML = '', 4000);
+}
+
+function switchAuthTab(t) {
+  document.querySelectorAll('#auth-section .tab').forEach((el,i) =>
+    el.classList.toggle('active', (t==='login'?0:1)===i));
+  document.getElementById('tab-login').classList.toggle('active', t==='login');
+  document.getElementById('tab-register').classList.toggle('active', t==='register');
+}
+
+async function register() {
+  const email = document.getElementById('reg-email').value;
+  const password = document.getElementById('reg-password').value;
+  const r = await fetch(API+'/api/auth/register', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({email,password})
+  });
+  const d = await r.json();
+  if (d.error) return alert_('auth-alert', d.error);
+  token = d.token; userEmail = d.user.email;
+  localStorage.setItem('ai_saas_token', token);
+  localStorage.setItem('ai_saas_email', userEmail);
+  showApp();
+}
+
+async function login() {
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+  const r = await fetch(API+'/api/auth/login', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({email,password})
+  });
+  const d = await r.json();
+  if (d.error) return alert_('auth-alert', d.error);
+  token = d.token; userEmail = d.user.email;
+  localStorage.setItem('ai_saas_token', token);
+  localStorage.setItem('ai_saas_email', userEmail);
+  showApp();
+}
+
+function logout() {
+  if (agentSocket) agentSocket.disconnect();
+  localStorage.clear(); token = null;
+  document.getElementById('auth-section').style.display = 'block';
+  document.getElementById('app-section').style.display = 'none';
+}
+
+// ===== MAIN TABS =====
+function switchMainTab(name) {
+  document.querySelectorAll('#app-section > .tabs .tab').forEach((el,i) => {
+    const names = ['bots','agent','flows','contacts'];
+    el.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.getElementById('main-'+name).classList.add('active');
+}
+
+// ===== BOTS =====
+async function loadBots() {
+  const r = await fetch(API+'/api/bots', {headers:{Authorization:'Bearer '+token}});
+  allBots = await r.json();
+  renderBotsList();
+  populateBotSelectors();
+}
+
+function populateBotSelectors() {
+  ['agent-bot-select','flow-bot-select','contacts-bot-select'].forEach(id => {
+    const sel = document.getElementById(id);
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">-- Chọn bot --</option>' +
+      allBots.map(b => `<option value="${b.id}" ${b.id===cur?'selected':''}>${b.bot_avatar} ${b.name}</option>`).join('');
+  });
+}
+
+function renderBotsList() {
+  const el = document.getElementById('bots-list');
+  if (!allBots.length) {
+    el.innerHTML = '<p style="color:#94a3b8;font-size:14px">Chưa có bot nào. Tạo bot đầu tiên phía trên!</p>';
+    return;
+  }
+  el.innerHTML = allBots.map(bot => `
+    <div class="bot-card">
+      <div class="bot-card-header">
+        <div>
+          <span style="font-size:20px">${bot.bot_avatar}</span>
+          <span class="bot-name" style="margin-left:8px">${bot.name}</span>
+          <span class="tag ${bot.is_active?'tag-active':'tag-inactive'}" style="margin-left:8px">
+            ${bot.is_active?'Hoạt động':'Tắt'}
+          </span>
+        </div>
+        <div class="flex">
+          <button class="btn btn-sm btn-outline" onclick="toggleBot('${bot.id}',${bot.is_active})">
+            ${bot.is_active?'Tắt':'Bật'}
+          </button>
+          <button class="btn btn-sm btn-danger" onclick="deleteBot('${bot.id}')">Xoá</button>
+        </div>
+      </div>
+      <div class="bot-id">ID: ${bot.id} | Model: ${bot.model}</div>
+      <div class="flex" style="margin-top:10px;gap:8px">
+        <button class="btn btn-sm btn-outline" onclick="getScript('${bot.id}',this)">📋 Embed Script</button>
+        <a href="/preview/${bot.id}" target="_blank" class="btn btn-sm btn-success" style="text-decoration:none">▶ Test Widget</a>
+      </div>
+      <div id="script-${bot.id}" style="display:none"></div>
+    </div>
+  `).join('');
+}
+
+async function createBot() {
+  const data = {
+    name: document.getElementById('b-name').value,
+    system_prompt: document.getElementById('b-prompt').value,
+    primary_color: document.getElementById('b-color').value,
+    bot_avatar: document.getElementById('b-avatar').value,
+    welcome_message: document.getElementById('b-welcome').value,
+    position: document.getElementById('b-position').value,
+    model: document.getElementById('b-model').value,
+    max_tokens: parseInt(document.getElementById('b-tokens').value),
+    business_info: document.getElementById('b-bizinfo').value
+  };
+  if (!data.name || !data.system_prompt)
+    return alert_('bot-alert', 'Vui lòng nhập tên và system prompt');
+  const r = await fetch(API+'/api/bots', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    body: JSON.stringify(data)
+  });
+  const d = await r.json();
+  if (d.error) return alert_('bot-alert', d.error);
+  alert_('bot-alert', '✅ Tạo bot thành công!', 'success');
+  loadBots();
+}
+
+async function getScript(botId, btn) {
+  const div = document.getElementById('script-'+botId);
+  if (div.style.display !== 'none') { div.style.display='none'; return; }
+  const r = await fetch(API+'/api/bots/'+botId+'/script', {headers:{Authorization:'Bearer '+token}});
+  const d = await r.json();
+  div.style.display = 'block';
+  div.innerHTML = `
+    <div class="script-box" id="sbox-${botId}">${escHtml(d.script)}<button class="copy-btn" onclick="copyScript('${botId}')">Copy</button></div>
+    <p style="font-size:12px;color:#64748b;margin-top:6px">👆 Dán đoạn script này vào trước thẻ &lt;/body&gt; của website.</p>
+  `;
+}
+
+function copyScript(botId) {
+  const text = document.getElementById('sbox-'+botId).innerText.replace('Copy','').trim();
+  navigator.clipboard.writeText(text).then(() => {
+    document.querySelector(`#sbox-${botId} .copy-btn`).textContent = '✓ Đã copy!';
+    setTimeout(() => document.querySelector(`#sbox-${botId} .copy-btn`).textContent = 'Copy', 2000);
+  });
+}
+
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function toggleBot(id, current) {
+  await fetch(API+'/api/bots/'+id, {
+    method:'PUT',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    body: JSON.stringify({is_active: current?0:1})
+  });
+  loadBots();
+}
+
+async function deleteBot(id) {
+  if (!confirm('Xoá bot này?')) return;
+  await fetch(API+'/api/bots/'+id, {method:'DELETE', headers:{Authorization:'Bearer '+token}});
+  loadBots();
+}
+
+// ===== LIVE AGENT =====
+function initAgentSocket() {
+  const botId = document.getElementById('agent-bot-select').value;
+  if (!botId) return;
+  currentAgentBotId = botId;
+  currentSessionId = null;
+
+  if (agentSocket) agentSocket.disconnect();
+
+  agentSocket = io();
+  agentSocket.emit('operator:join', { token, botId });
+  document.getElementById('agent-status').innerHTML = '<span class="online-dot"></span>Đang kết nối...';
+
+  agentSocket.on('sessions:list', sessions => {
+    document.getElementById('agent-status').innerHTML = '<span class="online-dot"></span>Đã kết nối';
+    renderSessionList(sessions);
+  });
+
+  agentSocket.on('message:new', data => {
+    // Cập nhật session list
+    refreshSessionList();
+    // Nếu đang xem session này thì append message
+    if (data.sessionId === currentSessionId) {
+      appendChatMessage(data.role, data.content);
+    } else {
+      // Badge notify
+      const item = document.querySelector(`.session-item[data-id="${data.sessionId}"]`);
+      if (item && data.role === 'user') {
+        item.style.background = '#fef9c3';
+      }
+    }
+  });
+
+  agentSocket.on('contact:updated', function(data) {
+  // Cập nhật contact trong session list
+  const item = document.querySelector(`.session-item[data-id="${data.sessionId}"]`);
+  if (item && data.contact.phone) {
+    const phoneEl = item.querySelector('.session-phone');
+    if (phoneEl) phoneEl.textContent = '📞 ' + data.contact.phone;
+    else item.insertAdjacentHTML('beforeend', `<div class="session-phone" style="font-size:11px;color:#64748b;margin-top:2px">📞 ${data.contact.phone}</div>`);
+  }
+  // Nếu đang mở tab Contacts thì reload luôn
+  const contactsTab = document.getElementById('main-contacts');
+  if (contactsTab && contactsTab.classList.contains('active')) {
+    loadContacts();
+  }
+});
+
+  agentSocket.on('session:history', ({sessionId, messages, contact}) => {
+    currentSessionId = sessionId;
+    renderChatPanel(sessionId, messages, contact);
+  });
+
+  agentSocket.on('connect_error', () => {
+    document.getElementById('agent-status').textContent = '❌ Lỗi kết nối';
+  });
+}
+
+function renderSessionList(sessions) {
+  const el = document.getElementById('session-list-body');
+  document.getElementById('session-count').textContent = sessions.length;
+  if (!sessions.length) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8;font-size:13px">Chưa có cuộc trò chuyện</div>';
+    return;
+  }
+  el.innerHTML = sessions.map(s => `
+    <div class="session-item ${s.operator_mode?'operator':''} ${s.id===currentSessionId?'active':''}"
+      data-id="${s.id}" onclick="viewSession('${s.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="session-name">
+          ${s.contact_name || '👤 Khách #'+s.id.slice(0,6)}
+          ${s.operator_mode?'<span class="tag tag-operator" style="margin-left:4px">Agent</span>':''}
+        </div>
+        <span class="session-time">${formatTime(s.created_at)}</span>
+      </div>
+      <div class="session-preview">${s.last_message||s.first_message||'...'}</div>
+      ${s.contact_phone?`<div style="font-size:11px;color:#64748b;margin-top:2px">📞 ${s.contact_phone}</div>`:''}
+    </div>
+  `).join('');
+}
+
+async function refreshSessionList() {
+  if (!currentAgentBotId) return;
+  const r = await fetch(API+`/api/bots/${currentAgentBotId}/conversations`, {
+    headers:{Authorization:'Bearer '+token}
+  });
+  const sessions = await r.json();
+  renderSessionList(sessions);
+}
+
+function viewSession(sessionId) {
+  if (!agentSocket) return;
+  agentSocket.emit('session:view', { sessionId });
+  // highlight
+  document.querySelectorAll('.session-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.id === sessionId);
+    if (el.dataset.id === sessionId) el.style.background = '';
+  });
+}
+
+function renderChatPanel(sessionId, messages, contact) {
+  document.getElementById('cp-title').textContent = contact?.name || '👤 Khách #'+sessionId.slice(0,6);
+  
+  // Contact info
+  const parts = [];
+  if (contact?.phone) parts.push('📞 '+contact.phone);
+  if (contact?.email) parts.push('✉️ '+contact.email);
+  document.getElementById('cp-contact').textContent = parts.join(' · ') || 'Chưa thu thập thông tin';
+
+  // Actions
+  const actions = document.getElementById('cp-actions');
+  const session = document.querySelector(`.session-item[data-id="${sessionId}"]`);
+  const isOperator = session?.classList.contains('operator');
+  actions.style.display = 'flex';
+  actions.innerHTML = isOperator
+    ? `<span style="font-size:12px;color:#ca8a04;font-weight:600">🟡 Đang handle</span>
+       <button class="btn btn-sm btn-warning" onclick="releaseSession()">🤖 Trả AI</button>`
+    : `<button class="btn btn-sm btn-success" onclick="takeoverSession('${sessionId}')">✋ Nhận handle</button>`;
+
+  // Messages
+  const msgEl = document.getElementById('cp-messages');
+  msgEl.innerHTML = '';
+  messages.forEach(m => appendChatMessage(m.role, m.content, false));
+  msgEl.scrollTop = msgEl.scrollHeight;
+
+  // Footer
+  const foot = document.getElementById('cp-foot');
+  foot.style.display = isOperator ? 'flex' : 'none';
+}
+
+function appendChatMessage(role, content, scroll=true) {
+  const el = document.getElementById('cp-messages');
+  const div = document.createElement('div');
+  const labels = {user:'👤 Khách', assistant:'🤖 AI', operator:'👨‍💼 Nhân viên'};
+  const cls = {user:'msg-user', assistant:'msg-assistant', operator:'msg-operator'};
+  div.innerHTML = `
+    <div class="msg-label">${labels[role]||role}</div>
+    <div class="msg-bubble ${cls[role]||'msg-user'}">${escHtml(content)}</div>
+  `;
+  div.style.display='flex';div.style.flexDirection='column';
+  div.style.alignItems = role==='operator'?'flex-end':'flex-start';
+  el.appendChild(div);
+  if (scroll) el.scrollTop = el.scrollHeight;
+}
+
+function takeoverSession(sessionId) {
+  if (!agentSocket) return;
+  agentSocket.emit('operator:takeover', { sessionId });
+  document.getElementById('cp-foot').style.display = 'flex';
+  const actions = document.getElementById('cp-actions');
+  actions.innerHTML = `<span style="font-size:12px;color:#ca8a04;font-weight:600">🟡 Đang handle</span>
+    <button class="btn btn-sm btn-warning" onclick="releaseSession()">🤖 Trả AI</button>`;
+  refreshSessionList();
+}
+
+function releaseSession() {
+  if (!agentSocket || !currentSessionId) return;
+  agentSocket.emit('operator:release', { sessionId: currentSessionId });
+  document.getElementById('cp-foot').style.display = 'none';
+  const actions = document.getElementById('cp-actions');
+  actions.innerHTML = `<button class="btn btn-sm btn-success" onclick="takeoverSession('${currentSessionId}')">✋ Nhận handle</button>`;
+  refreshSessionList();
+}
+
+function sendAgentMsg() {
+  const input = document.getElementById('agent-input');
+  const msg = input.value.trim();
+  if (!msg || !currentSessionId || !agentSocket) return;
+  agentSocket.emit('operator:message', { sessionId: currentSessionId, message: msg });
+  input.value = '';
+}
+
+// ===== FLOWS =====
+async function loadFlows() {
+  const botId = document.getElementById('flow-bot-select').value;
+  if (!botId) return;
+  document.getElementById('flow-creator').style.display = 'block';
+  const r = await fetch(API+`/api/bots/${botId}/flows`, {headers:{Authorization:'Bearer '+token}});
+  const flows = await r.json();
+  renderFlows(flows, botId);
+}
+
+function renderFlows(flows, botId) {
+  const el = document.getElementById('flows-list');
+  if (!flows.length) {
+    el.innerHTML = '<p style="color:#94a3b8;font-size:14px;margin-top:8px">Chưa có flow nào. Tạo flow đầu tiên!</p>';
+    return;
+  }
+  el.innerHTML = flows.map(flow => `
+    <div class="flow-card">
+      <div class="flow-card-header">
+        <div>
+          <span style="font-weight:600;font-size:14px">⚡ ${flow.name}</span>
+          <span class="tag ${flow.is_active?'tag-active':'tag-inactive'}" style="margin-left:8px">
+            ${flow.is_active?'Bật':'Tắt'}
+          </span>
+        </div>
+        <div class="flex">
+          <button class="btn btn-sm btn-outline" onclick="toggleFlow('${flow.id}',${flow.is_active})">
+            ${flow.is_active?'Tắt':'Bật'}
+          </button>
+          <button class="btn btn-sm btn-danger" onclick="deleteFlow('${flow.id}')">Xoá</button>
+        </div>
+      </div>
+      <div class="node-list" id="nodes-${flow.id}">
+        ${renderNodes(flow.nodes, flow.id)}
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-sm btn-outline" onclick="addNode('${flow.id}','trigger')">➕ Trigger</button>
+        <button class="btn btn-sm btn-outline" onclick="addNode('${flow.id}','send_message')">➕ Gửi tin</button>
+        <button class="btn btn-sm btn-outline" onclick="addNode('${flow.id}','collect_info')">➕ Thu thập info</button>
+        <button class="btn btn-sm btn-outline" onclick="addNode('${flow.id}','ai_reply')">➕ AI trả lời</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderNodes(nodes, flowId) {
+  if (!nodes.length) return '<p style="font-size:13px;color:#94a3b8">Chưa có node. Thêm node bên dưới.</p>';
+  return nodes.map((node, idx) => {
+    const typeLabels = {trigger:'Trigger',send_message:'Gửi tin',collect_info:'Thu thập',ai_reply:'AI Reply'};
+    const typeClass  = {trigger:'node-trigger',send_message:'node-message',collect_info:'node-collect',ai_reply:'node-ai'};
+    let detail = '';
+    if (node.type==='trigger')      detail = `Keywords: <b>${node.config?.keywords||'(chưa đặt)'}</b>`;
+    if (node.type==='send_message') detail = `Tin: <b>${node.config?.message||'(chưa đặt)'}</b>`;
+    if (node.type==='collect_info') detail = `Thu: <b>${node.config?.fields||'name,phone,email'}</b>`;
+    if (node.type==='ai_reply')     detail = `AI với prompt tùy chỉnh`;
+    return `
+      <div class="node-item">
+        <span class="node-type ${typeClass[node.type]||''}">${typeLabels[node.type]||node.type}</span>
+        <span style="font-size:13px;flex:1">${detail}</span>
+        <button class="btn btn-sm btn-outline" onclick="editNode('${flowId}',${idx})" style="padding:4px 10px">✏️</button>
+        <button class="btn btn-sm btn-danger" onclick="removeNode('${flowId}',${idx})" style="padding:4px 10px">✕</button>
+      </div>
+    `;
+  }).join('');
+}
+
+async function createFlow() {
+  const botId = document.getElementById('flow-bot-select').value;
+  const name  = document.getElementById('fl-name').value.trim();
+  if (!botId || !name) return alert_('flow-alert','Nhập tên flow');
+  await fetch(API+`/api/bots/${botId}/flows`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    body: JSON.stringify({name, nodes:[]})
+  });
+  document.getElementById('fl-name').value = '';
+  loadFlows();
+}
+
+async function toggleFlow(id, current) {
+  await fetch(API+`/api/flows/${id}`, {
+    method:'PUT',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    body: JSON.stringify({is_active: current?0:1})
+  });
+  loadFlows();
+}
+
+async function deleteFlow(id) {
+  if (!confirm('Xoá flow này?')) return;
+  await fetch(API+`/api/flows/${id}`, {method:'DELETE', headers:{Authorization:'Bearer '+token}});
+  loadFlows();
+}
+
+// Edit node inline
+const nodeEditors = {};
+
+async function addNode(flowId, type) {
+  const config = await promptNodeConfig(type);
+  if (!config) return;
+  const botId = document.getElementById('flow-bot-select').value;
+  // Lấy nodes hiện tại
+  const r = await fetch(API+`/api/bots/${botId}/flows`, {headers:{Authorization:'Bearer '+token}});
+  const flows = await r.json();
+  const flow  = flows.find(f => f.id === flowId);
+  if (!flow) return;
+  flow.nodes.push({ type, config });
+  await fetch(API+`/api/flows/${flowId}`, {
+    method:'PUT',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    body: JSON.stringify({nodes: flow.nodes})
+  });
+  loadFlows();
+}
+
+async function editNode(flowId, idx) {
+  const botId = document.getElementById('flow-bot-select').value;
+  const r = await fetch(API+`/api/bots/${botId}/flows`, {headers:{Authorization:'Bearer '+token}});
+  const flows = await r.json();
+  const flow  = flows.find(f => f.id === flowId);
+  if (!flow) return;
+  const node = flow.nodes[idx];
+  const config = await promptNodeConfig(node.type, node.config);
+  if (!config) return;
+  flow.nodes[idx].config = config;
+  await fetch(API+`/api/flows/${flowId}`, {
+    method:'PUT',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    body: JSON.stringify({nodes: flow.nodes})
+  });
+  loadFlows();
+}
+
+async function removeNode(flowId, idx) {
+  const botId = document.getElementById('flow-bot-select').value;
+  const r = await fetch(API+`/api/bots/${botId}/flows`, {headers:{Authorization:'Bearer '+token}});
+  const flows = await r.json();
+  const flow  = flows.find(f => f.id === flowId);
+  if (!flow) return;
+  flow.nodes.splice(idx, 1);
+  await fetch(API+`/api/flows/${flowId}`, {
+    method:'PUT',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    body: JSON.stringify({nodes: flow.nodes})
+  });
+  loadFlows();
+}
+
+function promptNodeConfig(type, existing={}) {
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99999;display:flex;align-items:center;justify-content:center';
+    const templates = {
+      trigger: `<label>Keywords kích hoạt (cách nhau bằng dấu phẩy)</label>
+        <input id="nc-keywords" placeholder="đặt lịch, book, hẹn, demo, tư vấn" value="${existing?.keywords||''}"/>
+        <p style="font-size:12px;color:#94a3b8;margin-top:4px">Khi khách nhắn chứa 1 trong các keyword → flow được kích hoạt</p>`,
+      send_message: `<label>Nội dung tin nhắn tự động</label>
+        <textarea id="nc-message" rows="4" placeholder="VD: Cảm ơn bạn đã quan tâm! Để đặt lịch tư vấn, vui lòng cho mình biết tên và số điện thoại nhé 😊">${existing?.message||''}</textarea>`,
+      collect_info: `<label>Các trường cần thu thập</label>
+        <input id="nc-fields" value="${existing?.fields||'name,phone,email'}" placeholder="name,phone,email"/>
+        <p style="font-size:12px;color:#94a3b8;margin-top:4px">Bot sẽ khéo léo hỏi các thông tin này trong cuộc trò chuyện</p>`,
+      ai_reply: `<label>Custom prompt cho node này (tùy chọn)</label>
+        <textarea id="nc-prompt" rows="3" placeholder="VD: Hỏi thêm thông tin về yêu cầu của khách, sau đó xác nhận lịch hẹn">${existing?.prompt||''}</textarea>`
+    };
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:16px;padding:24px;max-width:440px;width:90%;font-family:inherit">
+        <h3 style="margin-bottom:16px;font-size:15px">⚙️ Cấu hình node: ${type}</h3>
+        <div style="display:flex;flex-direction:column;gap:10px">${templates[type]||''}</div>
+        <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end">
+          <button onclick="this.closest('[style*=fixed]').remove();window._nodeResolve(null)" 
+            style="padding:8px 18px;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer;font-size:14px;background:#fff">Huỷ</button>
+          <button onclick="window._saveNode('${type}')" 
+            style="padding:8px 18px;background:#2563eb;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600">Lưu</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    window._nodeResolve = resolve;
+    window._saveNode = (type) => {
+      const cfg = {};
+      if (type==='trigger')      cfg.keywords = document.getElementById('nc-keywords')?.value;
+      if (type==='send_message') cfg.message  = document.getElementById('nc-message')?.value;
+      if (type==='collect_info') cfg.fields   = document.getElementById('nc-fields')?.value;
+      if (type==='ai_reply')     cfg.prompt   = document.getElementById('nc-prompt')?.value;
+      overlay.remove();
+      resolve(cfg);
+    };
+  });
+}
+
+// ===== CONTACTS =====
+async function loadContacts() {
+  const botId = document.getElementById('contacts-bot-select').value;
+  if (!botId) return;
+  const r = await fetch(API+`/api/bots/${botId}/conversations`, {headers:{Authorization:'Bearer '+token}});
+  const sessions = await r.json();
+  const wrap = document.getElementById('contacts-table-wrap');
+  const withContact = sessions.filter(s => s.contact_name||s.contact_phone||s.contact_email);
+  if (!withContact.length) {
+    wrap.innerHTML = '<div class="empty-state">📭 Chưa thu thập được thông tin liên hệ nào.<br><small>Bot sẽ tự động hỏi khi cơ hội phù hợp.</small></div>';
+    return;
+  }
+  wrap.innerHTML = `
+    <table class="contacts-table">
+      <thead><tr>
+        <th>Tên</th><th>Điện thoại</th><th>Email</th><th>Tin nhắn đầu</th><th>Số tin</th><th>Thời gian</th>
+      </tr></thead>
+      <tbody>
+        ${withContact.map(s => `
+          <tr>
+            <td>${s.contact_name||'<span style="color:#cbd5e1">—</span>'}</td>
+            <td>${s.contact_phone?`<a href="tel:${s.contact_phone}">${s.contact_phone}</a>`:'<span style="color:#cbd5e1">—</span>'}</td>
+            <td>${s.contact_email?`<a href="mailto:${s.contact_email}">${s.contact_email}</a>`:'<span style="color:#cbd5e1">—</span>'}</td>
+            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.first_message||'...'}</td>
+            <td style="text-align:center">${s.message_count}</td>
+            <td>${formatTime(s.created_at)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    <p style="font-size:12px;color:#94a3b8;margin-top:12px">📊 ${withContact.length} / ${sessions.length} cuộc trò chuyện đã thu thập được thông tin</p>
+  `;
+}
+
+// ===== UTILS =====
+function formatTime(ts) {
+  if (!ts) return '';
+  const d = new Date(ts * 1000);
+  const now = new Date();
+  const diff = (now - d) / 1000;
+  if (diff < 60)   return 'Vừa xong';
+  if (diff < 3600) return Math.floor(diff/60)+'p trước';
+  if (diff < 86400)return Math.floor(diff/3600)+'h trước';
+  return d.toLocaleDateString('vi-VN');
+}
+</script>
+</body>
+</html>

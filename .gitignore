@@ -1,0 +1,11 @@
+# KHÔNG commit những thứ này
+node_modules/
+data/
+*.db
+*.db-shm
+*.db-wal
+.env
+logs/
+npm-debug.log*
+.DS_Store
+Thumbs.db
