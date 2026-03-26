@@ -47,6 +47,9 @@ const io = new Server(server, {
   cors: corsOptions,
   pingTimeout: 60000,
   pingInterval: 25000,
+  transports: ["polling", "websocket"], // polling trước, websocket sau
+  allowUpgrades: true,
+  path: "/socket.io/",
 });
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
