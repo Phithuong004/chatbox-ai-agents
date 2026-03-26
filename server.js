@@ -797,6 +797,25 @@ app.get("/preview/:botId", (req, res) => {
 </html>`);
 });
 
+// ===== DEPLOY WEBHOOK =====
+const { execSync } = require("child_process");
+app.post("/deploy", (req, res) => {
+  const key = req.query.key;
+  if (key !== process.env.DEPLOY_KEY) {
+    return res.status(403).json({ error: "Unauthorized" });
+  }
+  try {
+    const output = execSync("cd ~/www/chatapp.theoceanwide.com && git pull && npm install && pm2 restart chatapp --update-env", 
+      { encoding: "utf8" }
+    );
+    console.log("[Deploy]", output);
+    res.json({ success: true, output });
+  } catch (err) {
+    console.error("[Deploy Error]", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ===== SERVE DASHBOARD =====
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "dashboard/index.html")));
 
