@@ -12,14 +12,18 @@ const path = require("path");
 const fs = require("fs");
 const http = require("http");
 const { Server } = require("socket.io");
+const crypto = require("crypto");
 
 // ===== STARTUP VALIDATION =====
-if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
-  console.error("❌ JWT_SECRET thiếu hoặc quá ngắn (cần ≥32 ký tự)");
-  process.exit(1);
-}
-if (!process.env.OPENAI_API_KEY) {
-  console.error("❌ OPENAI_API_KEY chưa được cấu hình");
+const REQUIRED_ENV = ["JWT_SECRET", "OPENAI_API_KEY", "MJ_APIKEY_PUBLIC", "MJ_APIKEY_PRIVATE", "MJ_SENDER_EMAIL"];
+REQUIRED_ENV.forEach((key) => {
+  if (!process.env[key]) {
+    console.error(`❌ Thiếu biến môi trường: ${key}`);
+    process.exit(1);
+  }
+});
+if (process.env.JWT_SECRET.length < 32) {
+  console.error("❌ JWT_SECRET quá ngắn (cần ≥32 ký tự)");
   process.exit(1);
 }
 
@@ -33,7 +37,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // server-to-server, widget embed
+    if (!origin) return callback(null, true);
     if (allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -47,7 +51,7 @@ const io = new Server(server, {
   cors: corsOptions,
   pingTimeout: 60000,
   pingInterval: 25000,
-  transports: ["polling", "websocket"], // polling trước, websocket sau
+  transports: ["polling", "websocket"],
   allowUpgrades: true,
   path: "/socket.io/",
 });
@@ -56,9 +60,9 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 // ===== DATABASE =====
 if (!fs.existsSync("data")) fs.mkdirSync("data", { recursive: true });
 const db = new Database("data/saas.db");
-db.pragma("journal_mode = WAL");   // tăng hiệu suất concurrent
-db.pragma("foreign_keys = ON");    // enforce FK
-db.pragma("synchronous = NORMAL"); // an toàn + nhanh hơn FULL
+db.pragma("journal_mode = WAL");
+db.pragma("foreign_keys = ON");
+db.pragma("synchronous = NORMAL");
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
@@ -66,6 +70,15 @@ db.exec(`
     email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
     created_at INTEGER DEFAULT (strftime('%s','now'))
+  );
+  CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    token_hash TEXT NOT NULL,
+    expires_at INTEGER NOT NULL,
+    used INTEGER DEFAULT 0,
+    created_at INTEGER DEFAULT (strftime('%s','now')),
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
   );
   CREATE TABLE IF NOT EXISTS bots (
     id TEXT PRIMARY KEY,
@@ -127,6 +140,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_sessions_bot ON chat_sessions(bot_id);
   CREATE INDEX IF NOT EXISTS idx_messages_session ON chat_messages(session_id);
   CREATE INDEX IF NOT EXISTS idx_contacts_session ON session_contacts(session_id);
+  CREATE INDEX IF NOT EXISTS idx_reset_tokens_hash ON password_reset_tokens(token_hash);
 `);
 
 // ===== MIGRATIONS =====
@@ -152,6 +166,96 @@ function isValidEmail(email) {
 
 function isValidUUID(id) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+}
+
+// ===== MAILJET =====
+async function sendEmail({ to, toName, subject, htmlContent, textContent }) {
+  const payload = {
+    Messages: [
+      {
+        From: {
+          Email: process.env.MJ_SENDER_EMAIL,
+          Name: process.env.MJ_SENDER_NAME || "AI Chat SaaS",
+        },
+        To: [{ Email: to, Name: toName || to }],
+        Subject: subject,
+        TextPart: textContent || "",
+        HTMLPart: htmlContent || "",
+      },
+    ],
+  };
+
+  const credentials = Buffer.from(
+    `${process.env.MJ_APIKEY_PUBLIC}:${process.env.MJ_APIKEY_PRIVATE}`
+  ).toString("base64");
+
+  const response = await fetch("https://api.mailjet.com/v3.1/send", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Basic ${credentials}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json();
+  if (!response.ok || data.Messages?.[0]?.Status !== "success") {
+    console.error("[Mailjet Error]", JSON.stringify(data));
+    throw new Error("Gửi email thất bại");
+  }
+  return data;
+}
+
+function buildResetEmailHtml(resetUrl, email) {
+  return `
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Đặt lại mật khẩu</title>
+</head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <div style="max-width:560px;margin:40px auto;padding:0 16px">
+    <div style="background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0">
+      <div style="background:linear-gradient(135deg,#1e40af,#2563eb);padding:32px;text-align:center">
+        <div style="font-size:40px;margin-bottom:8px">🔐</div>
+        <h1 style="color:#fff;margin:0;font-size:22px;font-weight:700">Đặt lại mật khẩu</h1>
+        <p style="color:#bfdbfe;margin:8px 0 0;font-size:14px">AI Chat SaaS</p>
+      </div>
+      <div style="padding:32px">
+        <p style="color:#374151;font-size:15px;margin:0 0 16px">Xin chào,</p>
+        <p style="color:#374151;font-size:15px;margin:0 0 24px;line-height:1.6">
+          Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản 
+          <strong>${email}</strong>. Nhấn nút bên dưới để tạo mật khẩu mới.
+        </p>
+        <div style="text-align:center;margin-bottom:24px">
+          <a href="${resetUrl}" 
+             style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;
+                    padding:14px 32px;border-radius:10px;font-size:15px;font-weight:600;
+                    letter-spacing:0.3px">
+            Đặt lại mật khẩu →
+          </a>
+        </div>
+        <div style="background:#f8fafc;border-radius:10px;padding:16px;margin-bottom:24px">
+          <p style="margin:0;font-size:13px;color:#64748b;line-height:1.6">
+            ⏰ Link này sẽ hết hạn sau <strong>30 phút</strong>.<br/>
+            🛡️ Nếu bạn không yêu cầu đặt lại, vui lòng bỏ qua email này.
+          </p>
+        </div>
+        <p style="color:#94a3b8;font-size:12px;margin:0;word-break:break-all">
+          Hoặc copy link: <a href="${resetUrl}" style="color:#2563eb">${resetUrl}</a>
+        </p>
+      </div>
+      <div style="background:#f8fafc;padding:16px 32px;border-top:1px solid #e2e8f0;text-align:center">
+        <p style="margin:0;font-size:12px;color:#94a3b8">
+          © ${new Date().getFullYear()} AI Chat SaaS — Email tự động, vui lòng không reply.
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
 }
 
 // ===== CONTACT HELPERS =====
@@ -262,7 +366,6 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: "20kb" }));
 app.use(express.urlencoded({ extended: false, limit: "20kb" }));
 
-// Security headers
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "SAMEORIGIN");
@@ -277,7 +380,7 @@ app.get("/static/widget.js", (req, res) => {
   try {
     const content = fs.readFileSync(filePath, "utf8");
     res.setHeader("Content-Type", "application/javascript");
-    res.setHeader("Cache-Control", "public, max-age=300"); // cache 5 phút production
+    res.setHeader("Cache-Control", "public, max-age=300");
     res.send(content);
   } catch (err) {
     console.error("widget.js error:", err.message);
@@ -299,12 +402,21 @@ app.use(helmet({
 
 // ===== RATE LIMITERS =====
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 phút
+  windowMs: 15 * 60 * 1000,
   max: 10,
   message: { error: "Quá nhiều lần thử, vui lòng đợi 15 phút" },
   standardHeaders: true,
   legacyHeaders: false,
-  skipSuccessfulRequests: true, // chỉ đếm failed requests
+  skipSuccessfulRequests: true,
+});
+
+const resetLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 giờ
+  max: 3,
+  message: { error: "Quá nhiều yêu cầu đặt lại mật khẩu, vui lòng đợi 1 giờ" },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.body?.email || req.ip,
 });
 
 const chatLimiter = rateLimit({
@@ -338,13 +450,20 @@ app.post("/api/auth/register", authLimiter, async (req, res) => {
   const email    = sanitize(req.body.email || "", 254).toLowerCase();
   const password = sanitize(req.body.password || "", 128);
 
-  if (!isValidEmail(email))
-    return res.status(400).json({ error: "Email không hợp lệ" });
-  if (password.length < 8)
-    return res.status(400).json({ error: "Mật khẩu phải ≥8 ký tự" });
+  // Chi tiết validation
+  const errors = {};
+  if (!email) errors.email = "Email là bắt buộc";
+  else if (!isValidEmail(email)) errors.email = "Định dạng email không hợp lệ";
+
+  if (!password) errors.password = "Mật khẩu là bắt buộc";
+  else if (password.length < 8) errors.password = "Mật khẩu phải có ít nhất 8 ký tự";
+  else if (!/[A-Z]/.test(password) && !/[0-9]/.test(password))
+    errors.password = "Mật khẩu nên chứa chữ hoa hoặc số để bảo mật hơn";
+
+  if (Object.keys(errors).length > 0) return res.status(400).json({ errors });
 
   if (db.prepare("SELECT id FROM users WHERE email = ?").get(email))
-    return res.status(409).json({ error: "Email đã tồn tại" });
+    return res.status(409).json({ errors: { email: "Email này đã được đăng ký" } });
 
   const hashed = await bcrypt.hash(password, 12);
   const id = uuidv4();
@@ -357,24 +476,153 @@ app.post("/api/auth/login", authLimiter, async (req, res) => {
   const email    = sanitize(req.body.email || "", 254).toLowerCase();
   const password = sanitize(req.body.password || "", 128);
 
-  if (!isValidEmail(email) || !password)
-    return res.status(400).json({ error: "Dữ liệu không hợp lệ" });
+  const errors = {};
+  if (!email) errors.email = "Email là bắt buộc";
+  else if (!isValidEmail(email)) errors.email = "Định dạng email không hợp lệ";
+  if (!password) errors.password = "Mật khẩu là bắt buộc";
+
+  if (Object.keys(errors).length > 0) return res.status(400).json({ errors });
 
   const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
 
-  // Timing-safe: vẫn chạy bcrypt dù user không tồn tại (chống timing attack)
+  // Timing-safe
   const dummyHash = "$2a$12$dummyhashfordummycompare000000000000000000000000000000";
   const valid = user ? await bcrypt.compare(password, user.password)
                      : await bcrypt.compare(password, dummyHash).then(() => false);
 
   if (!valid) {
-    // Log failed attempt
     db.prepare("INSERT INTO failed_logins (ip, email) VALUES (?, ?)").run(req.ip, email);
-    return res.status(401).json({ error: "Email hoặc mật khẩu không đúng" });
+    return res.status(401).json({ errors: { password: "Email hoặc mật khẩu không đúng" } });
   }
 
   const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "30d" });
   res.json({ token, user: { id: user.id, email: user.email } });
+});
+
+// ===== FORGOT PASSWORD =====
+app.post("/api/auth/forgot-password", resetLimiter, async (req, res) => {
+  const email = sanitize(req.body.email || "", 254).toLowerCase();
+
+  if (!email) return res.status(400).json({ errors: { email: "Email là bắt buộc" } });
+  if (!isValidEmail(email)) return res.status(400).json({ errors: { email: "Định dạng email không hợp lệ" } });
+
+  // Luôn trả 200 để tránh user enumeration
+  const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
+  if (!user) {
+    return res.json({ message: "Nếu email tồn tại, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu." });
+  }
+
+  // Xoá token cũ chưa dùng
+  db.prepare("DELETE FROM password_reset_tokens WHERE user_id = ? AND used = 0").run(user.id);
+
+  // Tạo token ngẫu nhiên
+  const rawToken = crypto.randomBytes(32).toString("hex");
+  const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+  const expiresAt = Math.floor(Date.now() / 1000) + 30 * 60; // 30 phút
+
+  db.prepare(`
+    INSERT INTO password_reset_tokens (id, user_id, token_hash, expires_at)
+    VALUES (?, ?, ?, ?)
+  `).run(uuidv4(), user.id, tokenHash, expiresAt);
+
+  const appUrl = (process.env.APP_URL || `http://localhost:${process.env.PORT || 3000}`).replace(/\/$/, "");
+  const resetUrl = `${appUrl}/reset-password?token=${rawToken}`;
+
+  try {
+    await sendEmail({
+      to: email,
+      toName: email.split("@")[0],
+      subject: "🔐 Đặt lại mật khẩu — AI Chat SaaS",
+      htmlContent: buildResetEmailHtml(resetUrl, email),
+      textContent: `Đặt lại mật khẩu của bạn tại: ${resetUrl}\nLink hết hạn sau 30 phút.`,
+    });
+    console.log(`[Reset] Đã gửi email đặt lại mật khẩu cho ${email}`);
+  } catch (err) {
+    console.error("[Reset Email Error]", err.message);
+    // Xoá token nếu gửi mail thất bại
+    db.prepare("DELETE FROM password_reset_tokens WHERE token_hash = ?").run(tokenHash);
+    return res.status(500).json({ error: "Không thể gửi email. Vui lòng thử lại sau." });
+  }
+
+  res.json({ message: "Nếu email tồn tại, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu." });
+});
+
+// ===== RESET PASSWORD =====
+app.post("/api/auth/reset-password", authLimiter, async (req, res) => {
+  const rawToken       = sanitize(req.body.token || "", 200);
+  const newPassword    = sanitize(req.body.password || "", 128);
+  const confirmPassword = sanitize(req.body.confirmPassword || "", 128);
+
+  const errors = {};
+  if (!rawToken) errors.token = "Token không hợp lệ";
+  if (!newPassword) errors.password = "Mật khẩu mới là bắt buộc";
+  else if (newPassword.length < 8) errors.password = "Mật khẩu phải có ít nhất 8 ký tự";
+  if (!confirmPassword) errors.confirmPassword = "Vui lòng xác nhận mật khẩu";
+  else if (newPassword !== confirmPassword) errors.confirmPassword = "Mật khẩu xác nhận không khớp";
+
+  if (Object.keys(errors).length > 0) return res.status(400).json({ errors });
+
+  const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+  const now = Math.floor(Date.now() / 1000);
+
+  const record = db.prepare(`
+    SELECT * FROM password_reset_tokens
+    WHERE token_hash = ? AND used = 0 AND expires_at > ?
+  `).get(tokenHash, now);
+
+  if (!record) {
+    return res.status(400).json({ errors: { token: "Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn" } });
+  }
+
+  const hashed = await bcrypt.hash(newPassword, 12);
+  db.prepare("UPDATE users SET password = ? WHERE id = ?").run(hashed, record.user_id);
+  db.prepare("UPDATE password_reset_tokens SET used = 1 WHERE id = ?").run(record.id);
+
+  console.log(`[Reset] Đặt lại mật khẩu thành công cho user=${record.user_id}`);
+  res.json({ message: "Đặt lại mật khẩu thành công! Bạn có thể đăng nhập ngay." });
+});
+
+// ===== VERIFY RESET TOKEN (để frontend kiểm tra trước khi render form) =====
+app.get("/api/auth/verify-reset-token", (req, res) => {
+  const rawToken = sanitize(req.query.token || "", 200);
+  if (!rawToken) return res.status(400).json({ valid: false, error: "Token trống" });
+
+  const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+  const now = Math.floor(Date.now() / 1000);
+
+  const record = db.prepare(`
+    SELECT id, expires_at FROM password_reset_tokens
+    WHERE token_hash = ? AND used = 0 AND expires_at > ?
+  `).get(tokenHash, now);
+
+  if (!record) return res.json({ valid: false, error: "Token không hợp lệ hoặc đã hết hạn" });
+  
+  const remainingMinutes = Math.ceil((record.expires_at - now) / 60);
+  res.json({ valid: true, expiresInMinutes: remainingMinutes });
+});
+
+// ===== CHANGE PASSWORD (for logged-in users) =====
+app.post("/api/auth/change-password", authMiddleware, async (req, res) => {
+  const currentPassword = sanitize(req.body.currentPassword || "", 128);
+  const newPassword     = sanitize(req.body.newPassword || "", 128);
+  const confirmPassword = sanitize(req.body.confirmPassword || "", 128);
+
+  const errors = {};
+  if (!currentPassword) errors.currentPassword = "Mật khẩu hiện tại là bắt buộc";
+  if (!newPassword) errors.newPassword = "Mật khẩu mới là bắt buộc";
+  else if (newPassword.length < 8) errors.newPassword = "Mật khẩu phải có ít nhất 8 ký tự";
+  if (!confirmPassword) errors.confirmPassword = "Vui lòng xác nhận mật khẩu";
+  else if (newPassword !== confirmPassword) errors.confirmPassword = "Mật khẩu xác nhận không khớp";
+
+  if (Object.keys(errors).length > 0) return res.status(400).json({ errors });
+
+  const user = db.prepare("SELECT * FROM users WHERE id = ?").get(req.user.id);
+  const valid = await bcrypt.compare(currentPassword, user.password);
+  if (!valid) return res.status(401).json({ errors: { currentPassword: "Mật khẩu hiện tại không đúng" } });
+
+  const hashed = await bcrypt.hash(newPassword, 12);
+  db.prepare("UPDATE users SET password = ? WHERE id = ?").run(hashed, req.user.id);
+  res.json({ message: "Đổi mật khẩu thành công!" });
 });
 
 // ===== BOT ROUTES =====
@@ -387,10 +635,11 @@ app.post("/api/bots", authMiddleware, (req, res) => {
   const system_prompt = sanitize(req.body.system_prompt || "", 4000);
   const business_info = sanitize(req.body.business_info || "", 3000);
 
-  if (!name || !system_prompt)
-    return res.status(400).json({ error: "Tên và system prompt là bắt buộc" });
+  const errors = {};
+  if (!name) errors.name = "Tên bot là bắt buộc";
+  if (!system_prompt) errors.system_prompt = "System prompt là bắt buộc";
+  if (Object.keys(errors).length > 0) return res.status(400).json({ errors });
 
-  // Giới hạn số bot mỗi user (chống spam)
   const botCount = db.prepare("SELECT COUNT(*) as c FROM bots WHERE user_id = ?").get(req.user.id);
   if (botCount.c >= 20)
     return res.status(429).json({ error: "Tối đa 20 bot mỗi tài khoản" });
@@ -426,7 +675,6 @@ app.put("/api/bots/:id", authMiddleware, (req, res) => {
   const updates = allowed.filter((f) => req.body[f] !== undefined);
   if (!updates.length) return res.status(400).json({ error: "Không có dữ liệu cập nhật" });
 
-  // Validate từng field khi update
   const values = updates.map((f) => {
     if (f === "model") return ["gpt-4o-mini","gpt-4o"].includes(req.body[f]) ? req.body[f] : bot.model;
     if (f === "position") return ["right","left"].includes(req.body[f]) ? req.body[f] : bot.position;
@@ -491,7 +739,6 @@ app.post("/api/widget/chat", chatLimiter, async (req, res) => {
     sid = uuidv4();
     db.prepare("INSERT INTO chat_sessions (id, bot_id) VALUES (?, ?)").run(sid, botId);
   } else {
-    // Verify session thuộc đúng bot này
     const sess = db.prepare("SELECT id FROM chat_sessions WHERE id = ? AND bot_id = ?").get(sid, botId);
     if (!sess) {
       sid = uuidv4();
@@ -576,7 +823,6 @@ app.get("/api/bots/:botId/conversations", authMiddleware, (req, res) => {
 
 app.get("/api/sessions/:sessionId/messages", authMiddleware, (req, res) => {
   if (!isValidUUID(req.params.sessionId)) return res.status(400).json({ error: "ID không hợp lệ" });
-  // Verify ownership
   const session = db.prepare(`
     SELECT s.id FROM chat_sessions s
     JOIN bots b ON b.id = s.bot_id
@@ -622,7 +868,6 @@ app.post("/api/bots/:botId/flows", authMiddleware, (req, res) => {
 
 app.put("/api/flows/:id", authMiddleware, (req, res) => {
   if (!isValidUUID(req.params.id)) return res.status(400).json({ error: "ID không hợp lệ" });
-  // Verify ownership qua join
   const flow = db.prepare(`
     SELECT f.id FROM flows f
     JOIN bots b ON b.id = f.bot_id
@@ -659,7 +904,6 @@ io.on("connection", (socket) => {
     try {
       if (!isValidUUID(botId)) return socket.emit("error", { message: "botId không hợp lệ" });
       const user = jwt.verify(token, process.env.JWT_SECRET);
-      // Verify bot thuộc user này
       const bot = db.prepare("SELECT id FROM bots WHERE id = ? AND user_id = ?").get(botId, user.id);
       if (!bot) return socket.emit("error", { message: "Không có quyền truy cập bot này" });
 
@@ -797,6 +1041,11 @@ app.get("/preview/:botId", (req, res) => {
 </html>`);
 });
 
+// ===== RESET PASSWORD PAGE =====
+app.get("/reset-password", (req, res) => {
+  res.sendFile(path.join(__dirname, "dashboard/index.html"));
+});
+
 // ===== DEPLOY WEBHOOK =====
 const { execSync } = require("child_process");
 app.post("/deploy", (req, res) => {
@@ -805,7 +1054,7 @@ app.post("/deploy", (req, res) => {
     return res.status(403).json({ error: "Unauthorized" });
   }
   try {
-    const output = execSync("cd ~/www/chatapp.theoceanwide.com && git pull && npm install && pm2 restart chatapp --update-env", 
+    const output = execSync("cd ~/www/chatapp.theoceanwide.com && git pull && npm install && pm2 restart chatapp --update-env",
       { encoding: "utf8" }
     );
     console.log("[Deploy]", output);
@@ -826,7 +1075,6 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ error: isProd ? "Lỗi server" : err.message });
 });
 
-// 404 handler
 app.use((req, res) => res.status(404).json({ error: "Endpoint không tồn tại" }));
 
 // ===== GRACEFUL SHUTDOWN =====

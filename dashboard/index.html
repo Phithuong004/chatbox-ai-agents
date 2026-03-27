@@ -2,285 +2,973 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8"/>
-  <title>AI Chat SaaS - Dashboard</title>
+  <title>AI Chat SaaS — Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
   <script src="/socket.io/socket.io.js"></script>
   <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;color:#1e293b}
-    .container{max-width:1000px;margin:0 auto;padding:24px 16px}
-    h1{font-size:24px;font-weight:700;margin-bottom:4px}
-    .subtitle{color:#64748b;font-size:14px;margin-bottom:0}
-    .card{background:#fff;border-radius:16px;border:1px solid #e2e8f0;padding:24px;margin-bottom:20px}
-    .card h2{font-size:16px;font-weight:600;margin-bottom:16px}
-    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .form-full{grid-column:1/-1}
-    label{font-size:13px;font-weight:500;color:#374151;display:block;margin-bottom:4px}
-    input,textarea,select{width:100%;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;
-      font-size:14px;outline:none;font-family:inherit;transition:border-color .2s}
-    input:focus,textarea:focus,select:focus{border-color:#2563eb}
-    textarea{resize:vertical;min-height:80px}
-    .btn{background:#2563eb;color:#fff;border:none;border-radius:8px;padding:10px 20px;
-      font-size:14px;font-weight:600;cursor:pointer;transition:opacity .2s;display:inline-block;text-decoration:none}
-    .btn:hover{opacity:.88}
-    .btn-sm{padding:6px 14px;font-size:13px}
-    .btn-danger{background:#ef4444}
-    .btn-warning{background:#f59e0b}
-    .btn-success{background:#16a34a}
-    .btn-outline{background:transparent;border:1.5px solid #2563eb;color:#2563eb}
-    .btn-outline:hover{background:#eff6ff;opacity:1}
-    .btn-gray{background:#64748b}
-    .alert{padding:12px 16px;border-radius:8px;font-size:14px;margin-bottom:16px}
-    .alert-error{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
-    .alert-success{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0}
-    .bot-card{border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:12px}
-    .bot-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-    .bot-name{font-weight:600;font-size:15px}
-    .bot-id{font-size:11px;color:#94a3b8;font-family:monospace}
-    .script-box{background:#0f172a;color:#a5f3fc;padding:14px;border-radius:8px;
-      font-family:monospace;font-size:12px;line-height:1.6;white-space:pre-wrap;
-      margin:10px 0;position:relative;overflow-x:auto}
-    .copy-btn{position:absolute;top:8px;right:8px;background:#334155;color:#fff;
-      border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer}
-    .copy-btn:hover{background:#475569}
-    .tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid #e2e8f0}
-    .tab{padding:10px 20px;cursor:pointer;font-size:14px;font-weight:500;color:#64748b;
-      border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .2s,border-color .2s}
-    .tab.active{color:#2563eb;border-bottom-color:#2563eb}
-    .tab-content{display:none}
-    .tab-content.active{display:block}
-    .tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
-    .tag-active{background:#dcfce7;color:#16a34a}
-    .tag-inactive{background:#fee2e2;color:#dc2626}
-    .tag-operator{background:#fef9c3;color:#ca8a04}
-    .flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    #auth-section{display:block}
-    #app-section{display:none}
-    .nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
-    .user-info{font-size:13px;color:#64748b}
+    :root {
+      --brand: #2563eb;
+      --brand-dark: #1d4ed8;
+      --brand-light: #eff6ff;
+      --brand-muted: #bfdbfe;
+      --success: #16a34a;
+      --success-bg: #f0fdf4;
+      --success-border: #bbf7d0;
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --danger-border: #fecaca;
+      --warning: #d97706;
+      --warning-bg: #fffbeb;
+      --warning-border: #fde68a;
+      --surface: #ffffff;
+      --surface-2: #f8fafc;
+      --border: #e2e8f0;
+      --border-focus: #93c5fd;
+      --text: #0f172a;
+      --text-2: #475569;
+      --text-3: #94a3b8;
+      --radius: 10px;
+      --radius-lg: 14px;
+      --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #f1f5f9;
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ===== AUTH SCREEN ===== */
+    #auth-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #1e293b 100%);
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    #auth-section::before {
+      content: '';
+      position: absolute;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 70%);
+      top: -200px; right: -200px;
+      pointer-events: none;
+    }
+    #auth-section::after {
+      content: '';
+      position: absolute;
+      width: 400px; height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(37,99,235,0.1) 0%, transparent 70%);
+      bottom: -100px; left: -100px;
+      pointer-events: none;
+    }
+    .auth-card {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 40px;
+      width: 100%;
+      max-width: 420px;
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    }
+    .auth-logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .auth-logo-icon {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, #2563eb, #60a5fa);
+      border-radius: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      margin-bottom: 12px;
+      box-shadow: 0 8px 24px rgba(37,99,235,0.4);
+    }
+    .auth-logo h1 {
+      color: #fff;
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .auth-logo p {
+      color: rgba(255,255,255,0.4);
+      font-size: 13px;
+    }
+    .auth-tabs {
+      display: flex;
+      background: rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 3px;
+      margin-bottom: 28px;
+    }
+    .auth-tab {
+      flex: 1;
+      text-align: center;
+      padding: 8px;
+      border-radius: 8px;
+      color: rgba(255,255,255,0.5);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .auth-tab.active {
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+    }
+    .auth-form { display: flex; flex-direction: column; gap: 16px; }
+    .form-field { display: flex; flex-direction: column; gap: 6px; }
+    .form-field label {
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .input-wrap { position: relative; }
+    .input-icon {
+      position: absolute;
+      left: 12px; top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255,255,255,0.3);
+      font-size: 16px;
+      pointer-events: none;
+    }
+    .auth-input {
+      width: 100%;
+      background: rgba(255,255,255,0.07);
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius);
+      padding: 11px 12px 11px 38px;
+      color: #fff;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s, background 0.2s;
+      outline: none;
+    }
+    .auth-input::placeholder { color: rgba(255,255,255,0.25); }
+    .auth-input:focus {
+      border-color: rgba(96,165,250,0.6);
+      background: rgba(255,255,255,0.1);
+    }
+    .auth-input.error { border-color: rgba(239,68,68,0.7); }
+    .field-error {
+      font-size: 12px;
+      color: #f87171;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .auth-btn {
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      box-shadow: 0 4px 12px rgba(37,99,235,0.4);
+    }
+    .auth-btn:hover { opacity: 0.92; }
+    .auth-btn:active { transform: scale(0.99); }
+    .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .auth-link {
+      text-align: center;
+      font-size: 13px;
+      color: rgba(255,255,255,0.4);
+    }
+    .auth-link a {
+      color: #60a5fa;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .auth-link a:hover { text-decoration: underline; }
+    .auth-alert {
+      background: rgba(239,68,68,0.15);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #f87171;
+      border-radius: var(--radius);
+      padding: 11px 14px;
+      font-size: 13px;
+    }
+    .auth-alert.success {
+      background: rgba(22,163,74,0.15);
+      border-color: rgba(22,163,74,0.3);
+      color: #4ade80;
+    }
+    /* Password strength */
+    .pwd-strength { margin-top: 4px; }
+    .pwd-bars { display: flex; gap: 3px; margin-bottom: 4px; }
+    .pwd-bar {
+      flex: 1; height: 3px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.1);
+      transition: background 0.3s;
+    }
+    .pwd-bar.weak { background: #ef4444; }
+    .pwd-bar.medium { background: #f59e0b; }
+    .pwd-bar.strong { background: #22c55e; }
+    .pwd-label { font-size: 11px; color: rgba(255,255,255,0.4); }
+    /* Forgot password link */
+    .forgot-link {
+      text-align: right;
+      font-size: 12px;
+    }
+    .forgot-link a {
+      color: rgba(255,255,255,0.4);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .forgot-link a:hover { color: #60a5fa; }
+
+    /* ===== APP LAYOUT ===== */
+    #app-section { display: none; }
+    .app-nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow);
+    }
+    .app-nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .app-nav-brand .brand-icon {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, #2563eb, #60a5fa);
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+    }
+    .app-nav-brand span {
+      font-weight: 800;
+      font-size: 16px;
+    }
+    .app-nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 5px 12px 5px 5px;
+      font-size: 13px;
+    }
+    .user-avatar {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, #2563eb, #60a5fa);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #fff;
+      font-weight: 700;
+    }
+    .user-email { color: var(--text-2); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* ===== TABS ===== */
+    .main-tabs {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      gap: 0;
+    }
+    .main-tab {
+      padding: 14px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-3);
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+      white-space: nowrap;
+    }
+    .main-tab:hover { color: var(--text-2); }
+    .main-tab.active { color: var(--brand); border-bottom-color: var(--brand); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ===== CONTAINER ===== */
+    .container { max-width: 1040px; margin: 0 auto; padding: 28px 20px; }
+
+    /* ===== CARDS ===== */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ===== FORM COMPONENTS ===== */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-full { grid-column: 1 / -1; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-2);
+      letter-spacing: 0.3px;
+    }
+    .form-group label .required { color: var(--danger); margin-left: 2px; }
+    .form-input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--surface);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    .form-input:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+    }
+    .form-input.error {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 3px rgba(220,38,38,0.08);
+    }
+    .form-input.valid { border-color: var(--success); }
+    .form-error {
+      font-size: 11px;
+      color: var(--danger);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 2px;
+    }
+    .form-hint { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+    textarea.form-input { resize: vertical; min-height: 80px; }
+    select.form-input { cursor: pointer; }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 18px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn:hover { opacity: 0.88; }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: var(--brand); color: #fff; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-warning { background: var(--warning); color: #fff; }
+    .btn-outline {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      color: var(--text-2);
+    }
+    .btn-outline:hover { border-color: var(--brand); color: var(--brand); opacity: 1; }
+    .btn-ghost { background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border); }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-xs { padding: 4px 10px; font-size: 11px; }
+
+    /* ===== ALERTS ===== */
+    .alert {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    .alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .alert-error { background: var(--danger-bg); border: 1px solid var(--danger-border); color: var(--danger); }
+    .alert-success { background: var(--success-bg); border: 1px solid var(--success-border); color: var(--success); }
+    .alert-warning { background: var(--warning-bg); border: 1px solid var(--warning-border); color: var(--warning); }
+    .alert-info { background: var(--brand-light); border: 1px solid var(--brand-muted); color: var(--brand-dark); }
+
+    /* ===== TAG / BADGE ===== */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .badge-active { background: #dcfce7; color: #15803d; }
+    .badge-inactive { background: #fee2e2; color: #b91c1c; }
+    .badge-operator { background: #fef9c3; color: #92400e; }
+    .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+    /* ===== BOT CARDS ===== */
+    .bot-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 12px;
+      transition: box-shadow 0.2s;
+    }
+    .bot-card:hover { box-shadow: var(--shadow-md); }
+    .bot-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-2);
+    }
+    .bot-card-info { display: flex; align-items: center; gap: 10px; }
+    .bot-avatar-chip {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: var(--brand-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      border: 1px solid var(--border);
+    }
+    .bot-name { font-weight: 700; font-size: 15px; }
+    .bot-meta { font-size: 11px; color: var(--text-3); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+    .bot-card-body { padding: 14px 20px; }
+    .bot-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .script-box {
+      background: #0f172a;
+      color: #7dd3fc;
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      position: relative;
+      overflow-x: auto;
+      margin-top: 12px;
+    }
+    .copy-btn {
+      position: absolute;
+      top: 8px; right: 8px;
+      background: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.7);
+      border: none;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.2s;
+    }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); }
 
     /* ===== LIVE AGENT ===== */
-    .agent-layout{display:grid;grid-template-columns:280px 1fr;gap:16px;min-height:500px}
-    .session-list{border:1px solid #e2e8f0;border-radius:12px;overflow:hidden}
-    .session-list-header{background:#f8fafc;padding:12px 16px;font-size:13px;font-weight:600;
-      border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between}
-    .session-item{padding:12px 16px;border-bottom:1px solid #f1f5f9;cursor:pointer;transition:background .15s}
-    .session-item:hover{background:#f8fafc}
-    .session-item.active{background:#eff6ff;border-left:3px solid #2563eb}
-    .session-item.operator{border-left:3px solid #f59e0b}
-    .session-name{font-size:13px;font-weight:600;color:#1e293b}
-    .session-preview{font-size:12px;color:#94a3b8;margin-top:2px;
-      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
-    .session-time{font-size:10px;color:#cbd5e1}
-    .chat-panel{border:1px solid #e2e8f0;border-radius:12px;display:flex;flex-direction:column}
-    .chat-panel-header{padding:14px 16px;border-bottom:1px solid #e2e8f0;
-      display:flex;align-items:center;justify-content:space-between;background:#f8fafc;border-radius:12px 12px 0 0}
-    .chat-panel-messages{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;
-      gap:8px;min-height:340px;max-height:400px}
-    .chat-panel-foot{padding:12px 16px;border-top:1px solid #e2e8f0;display:flex;gap:8px}
-    .msg-bubble{max-width:80%;padding:8px 12px;border-radius:12px;font-size:13px;line-height:1.5}
-    .msg-user{background:#f1f5f9;color:#1e293b;align-self:flex-start}
-    .msg-assistant{background:#eff6ff;color:#1e293b;align-self:flex-start;border-left:3px solid #2563eb}
-    .msg-operator{background:#fef9c3;color:#1e293b;align-self:flex-end;border-right:3px solid #f59e0b}
-    .msg-label{font-size:10px;color:#94a3b8;margin-bottom:2px}
-    .contact-card{background:#f8fafc;border-radius:8px;padding:12px;font-size:13px;margin-bottom:12px}
-    .contact-card .contact-row{display:flex;gap:6px;margin-bottom:4px;align-items:center}
-    .contact-card .contact-label{font-weight:600;color:#64748b;min-width:60px;font-size:12px}
-    .online-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;margin-right:4px}
-    .no-session{display:flex;align-items:center;justify-content:center;flex:1;
-      color:#94a3b8;font-size:14px;flex-direction:column;gap:8px;min-height:340px}
+    .agent-layout { display: grid; grid-template-columns: 290px 1fr; gap: 16px; min-height: 520px; }
+    .session-list { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; background: var(--surface); }
+    .session-list-hd {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface-2);
+    }
+    .session-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+      transition: background 0.15s;
+      border-left: 3px solid transparent;
+    }
+    .session-item:hover { background: var(--surface-2); }
+    .session-item.active { background: var(--brand-light); border-left-color: var(--brand); }
+    .session-item.operator { border-left-color: var(--warning); }
+    .session-item-name { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .session-item-preview { font-size: 12px; color: var(--text-3); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+    .session-item-meta { font-size: 11px; color: var(--text-3); margin-top: 4px; display: flex; gap: 8px; }
+    .chat-panel { border: 1px solid var(--border); border-radius: var(--radius-lg); display: flex; flex-direction: column; background: var(--surface); overflow: hidden; }
+    .chat-panel-hd {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .chat-panel-messages {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 360px;
+      max-height: 420px;
+    }
+    .chat-panel-foot {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      background: var(--surface-2);
+    }
+    .msg-wrap { display: flex; flex-direction: column; }
+    .msg-label { font-size: 10px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+    .msg-bubble {
+      max-width: 80%;
+      padding: 9px 13px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .msg-user { background: var(--surface-2); border: 1px solid var(--border); align-self: flex-start; }
+    .msg-assistant { background: var(--brand-light); border: 1px solid var(--brand-muted); align-self: flex-start; }
+    .msg-operator { background: #fef9c3; border: 1px solid #fde68a; align-self: flex-end; }
+    .no-session {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-3);
+      gap: 10px;
+      min-height: 360px;
+    }
+    .contact-mini { font-size: 12px; color: var(--text-2); display: flex; gap: 12px; flex-wrap: wrap; margin-top: 2px; }
+    .online-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; display: inline-block; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
     /* ===== FLOWS ===== */
-    .flow-card{border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:12px}
-    .flow-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-    .node-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
-    .node-item{border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;
-      display:flex;align-items:center;gap:10px;background:#f8fafc}
-    .node-type{font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase}
-    .node-trigger{background:#fef3c7;color:#d97706}
-    .node-message{background:#dcfce7;color:#16a34a}
-    .node-collect{background:#dbeafe;color:#1d4ed8}
-    .node-ai{background:#f3e8ff;color:#7c3aed}
-    .flow-builder{background:#f8fafc;border-radius:12px;padding:20px;margin-top:16px}
-    .node-add-btn{border:2px dashed #e2e8f0;border-radius:8px;padding:10px;text-align:center;
-      cursor:pointer;font-size:13px;color:#94a3b8;transition:border-color .2s}
-    .node-add-btn:hover{border-color:#2563eb;color:#2563eb}
+    .flow-card { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 12px; }
+    .flow-card-hd { padding: 14px 18px; border-bottom: 1px solid var(--border); background: var(--surface-2); display: flex; align-items: center; justify-content: space-between; }
+    .flow-card-body { padding: 16px 18px; }
+    .node-list { display: flex; flex-direction: column; gap: 8px; }
+    .node-item { border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; display: flex; align-items: center; gap: 10px; background: var(--surface-2); }
+    .node-badge { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+    .node-trigger { background: #fef3c7; color: #92400e; }
+    .node-message { background: #dcfce7; color: #166534; }
+    .node-collect { background: #dbeafe; color: #1e40af; }
+    .node-ai { background: #f3e8ff; color: #6b21a8; }
 
-    /* ===== CONTACTS ===== */
-    .contacts-table{width:100%;border-collapse:collapse;font-size:13px}
-    .contacts-table th{text-align:left;padding:10px 12px;border-bottom:2px solid #e2e8f0;
-      font-weight:600;color:#64748b;font-size:12px}
-    .contacts-table td{padding:10px 12px;border-bottom:1px solid #f1f5f9;color:#1e293b}
-    .contacts-table tr:hover td{background:#f8fafc}
-    .empty-state{text-align:center;padding:40px;color:#94a3b8;font-size:14px}
+    /* ===== CONTACTS TABLE ===== */
+    .contacts-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .contacts-table th { padding: 10px 14px; border-bottom: 2px solid var(--border); text-align: left; font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+    .contacts-table td { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; }
+    .contacts-table tr:hover td { background: var(--surface-2); }
+    .contacts-table a { color: var(--brand); text-decoration: none; }
+    .contacts-table a:hover { text-decoration: underline; }
 
-    /* Bot selector */
-    .bot-selector{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
-    .bot-selector select{max-width:280px;padding:8px 12px}
+    /* ===== SELECTORS ===== */
+    .bot-selector { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .bot-selector label { font-size: 12px; font-weight: 600; color: var(--text-2); white-space: nowrap; }
+    .bot-selector select.form-input { max-width: 260px; }
 
-    @media(max-width:640px){
-      .agent-layout{grid-template-columns:1fr}
-      .form-grid{grid-template-columns:1fr}
+    /* ===== MODAL / OVERLAY ===== */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      max-width: 460px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      border: 1px solid var(--border);
+    }
+    .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 20px; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px; }
+
+    /* ===== LOADING ===== */
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-state { text-align: center; padding: 48px 20px; color: var(--text-3); }
+    .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; margin-bottom: 6px; }
+    .empty-state small { font-size: 12px; }
+
+    /* ===== DIVIDER ===== */
+    .divider { height: 1px; background: var(--border); margin: 20px 0; }
+    .divider-text {
+      text-align: center;
+      position: relative;
+      margin: 20px 0;
+      font-size: 12px;
+      color: var(--text-3);
+    }
+    .divider-text::before, .divider-text::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: calc(50% - 30px);
+      height: 1px;
+      background: rgba(255,255,255,0.1);
+    }
+    .divider-text::before { left: 0; }
+    .divider-text::after { right: 0; }
+
+    /* ===== UTILS ===== */
+    .flex { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .ml-auto { margin-left: auto; }
+    .text-muted { color: var(--text-3); }
+    .text-sm { font-size: 12px; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .hidden { display: none !important; }
+
+    @media (max-width: 680px) {
+      .agent-layout { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .auth-card { padding: 28px 20px; }
+      .main-tab { padding: 12px 14px; font-size: 12px; }
     }
   </style>
 </head>
 <body>
-<div class="container">
 
-  <!-- ===== AUTH ===== -->
-  <div id="auth-section">
-    <h1>🤖 AI Chat SaaS</h1>
-    <p class="subtitle" style="margin-bottom:28px">Tạo chat widget AI cho website của bạn</p>
-    <div class="card" style="max-width:420px">
-      <div class="tabs">
-        <div class="tab active" onclick="switchAuthTab('login')">Đăng nhập</div>
-        <div class="tab" onclick="switchAuthTab('register')">Đăng ký</div>
+<!-- ===== AUTH ===== -->
+<div id="auth-section">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">🤖</div>
+      <h1>AI Chat SaaS</h1>
+      <p>Tạo chat widget AI cho website của bạn</p>
+    </div>
+
+    <!-- LOGIN / REGISTER / FORGOT / RESET -->
+    <div id="view-login">
+      <div class="auth-tabs">
+        <div class="auth-tab active" onclick="switchAuthTab('login')">Đăng nhập</div>
+        <div class="auth-tab" onclick="switchAuthTab('register')">Đăng ký</div>
       </div>
-      <div id="auth-alert"></div>
-      <div id="tab-login" class="tab-content active">
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <div><label>Email</label><input type="email" id="login-email" placeholder="email@example.com"/></div>
-          <div><label>Mật khẩu</label><input type="password" id="login-password" placeholder="••••••••"/></div>
-          <button class="btn" onclick="login()">Đăng nhập</button>
+      <div id="auth-alert" style="margin-bottom:16px"></div>
+      <div class="auth-form">
+        <div class="form-field">
+          <label>Email</label>
+          <div class="input-wrap">
+            <span class="input-icon">✉️</span>
+            <input class="auth-input" type="email" id="login-email" placeholder="email@example.com" oninput="clearFieldErr('login-email-err')" onkeydown="if(event.key==='Enter')login()"/>
+          </div>
+          <span class="field-error" id="login-email-err" style="display:none"></span>
         </div>
+        <div class="form-field">
+          <div class="flex">
+            <label>Mật khẩu</label>
+            <span class="forgot-link ml-auto"><a href="#" onclick="showView('forgot');return false">Quên mật khẩu?</a></span>
+          </div>
+          <div class="input-wrap">
+            <span class="input-icon">🔑</span>
+            <input class="auth-input" type="password" id="login-password" placeholder="••••••••" oninput="clearFieldErr('login-pwd-err')" onkeydown="if(event.key==='Enter')login()"/>
+          </div>
+          <span class="field-error" id="login-pwd-err" style="display:none"></span>
+        </div>
+        <button class="auth-btn" id="login-btn" onclick="login()">Đăng nhập</button>
       </div>
-      <div id="tab-register" class="tab-content">
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <div><label>Email</label><input type="email" id="reg-email" placeholder="email@example.com"/></div>
-          <div><label>Mật khẩu (≥8 ký tự)</label><input type="password" id="reg-password" placeholder="••••••••"/></div>
-          <button class="btn" onclick="register()">Tạo tài khoản</button>
+    </div>
+
+    <div id="view-register" style="display:none">
+      <div class="auth-tabs">
+        <div class="auth-tab" onclick="switchAuthTab('login')">Đăng nhập</div>
+        <div class="auth-tab active" onclick="switchAuthTab('register')">Đăng ký</div>
+      </div>
+      <div id="reg-alert" style="margin-bottom:16px"></div>
+      <div class="auth-form">
+        <div class="form-field">
+          <label>Email</label>
+          <div class="input-wrap">
+            <span class="input-icon">✉️</span>
+            <input class="auth-input" type="email" id="reg-email" placeholder="email@example.com" oninput="clearFieldErr('reg-email-err')" onkeydown="if(event.key==='Enter')register()"/>
+          </div>
+          <span class="field-error" id="reg-email-err" style="display:none"></span>
+        </div>
+        <div class="form-field">
+          <label>Mật khẩu</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔑</span>
+            <input class="auth-input" type="password" id="reg-password" placeholder="Tối thiểu 8 ký tự" oninput="checkPwdStrength(this.value);clearFieldErr('reg-pwd-err')" onkeydown="if(event.key==='Enter')register()"/>
+          </div>
+          <div class="pwd-strength" id="pwd-strength" style="display:none">
+            <div class="pwd-bars">
+              <div class="pwd-bar" id="pb1"></div>
+              <div class="pwd-bar" id="pb2"></div>
+              <div class="pwd-bar" id="pb3"></div>
+              <div class="pwd-bar" id="pb4"></div>
+            </div>
+            <span class="pwd-label" id="pwd-label"></span>
+          </div>
+          <span class="field-error" id="reg-pwd-err" style="display:none"></span>
+        </div>
+        <button class="auth-btn" id="reg-btn" onclick="register()">Tạo tài khoản</button>
+      </div>
+    </div>
+
+    <!-- FORGOT PASSWORD VIEW -->
+    <div id="view-forgot" style="display:none">
+      <div style="margin-bottom:20px">
+        <button class="btn btn-ghost btn-sm" onclick="showView('login')" style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);border-color:rgba(255,255,255,0.12)">← Quay lại</button>
+      </div>
+      <div style="color:#fff;margin-bottom:20px">
+        <div style="font-size:20px;margin-bottom:6px">🔒 Quên mật khẩu?</div>
+        <p style="color:rgba(255,255,255,0.5);font-size:13px;line-height:1.6">Nhập email của bạn và chúng tôi sẽ gửi link đặt lại mật khẩu.</p>
+      </div>
+      <div id="forgot-alert" style="margin-bottom:16px"></div>
+      <div class="auth-form">
+        <div class="form-field">
+          <label>Email tài khoản</label>
+          <div class="input-wrap">
+            <span class="input-icon">✉️</span>
+            <input class="auth-input" type="email" id="forgot-email" placeholder="email@example.com" oninput="clearFieldErr('forgot-email-err')" onkeydown="if(event.key==='Enter')sendForgotPwd()"/>
+          </div>
+          <span class="field-error" id="forgot-email-err" style="display:none"></span>
+        </div>
+        <button class="auth-btn" id="forgot-btn" onclick="sendForgotPwd()">Gửi link đặt lại mật khẩu</button>
+      </div>
+    </div>
+
+    <!-- RESET PASSWORD VIEW -->
+    <div id="view-reset" style="display:none">
+      <div style="color:#fff;margin-bottom:20px">
+        <div style="font-size:20px;margin-bottom:6px">🔐 Đặt lại mật khẩu</div>
+        <p style="color:rgba(255,255,255,0.5);font-size:13px;line-height:1.6">Tạo mật khẩu mới cho tài khoản của bạn.</p>
+      </div>
+      <div id="reset-alert" style="margin-bottom:16px"></div>
+      <div id="reset-token-checking" class="auth-alert" style="display:none">⏳ Đang kiểm tra link...</div>
+      <div id="reset-form" style="display:none">
+        <div class="auth-form">
+          <div class="form-field">
+            <label>Mật khẩu mới</label>
+            <div class="input-wrap">
+              <span class="input-icon">🔑</span>
+              <input class="auth-input" type="password" id="reset-password" placeholder="Tối thiểu 8 ký tự" oninput="checkResetPwdStrength(this.value);clearFieldErr('reset-pwd-err')" onkeydown="if(event.key==='Enter')resetPassword()"/>
+            </div>
+            <div class="pwd-strength" id="reset-pwd-strength" style="display:none">
+              <div class="pwd-bars">
+                <div class="pwd-bar" id="rpb1"></div>
+                <div class="pwd-bar" id="rpb2"></div>
+                <div class="pwd-bar" id="rpb3"></div>
+                <div class="pwd-bar" id="rpb4"></div>
+              </div>
+              <span class="pwd-label" id="reset-pwd-label"></span>
+            </div>
+            <span class="field-error" id="reset-pwd-err" style="display:none"></span>
+          </div>
+          <div class="form-field">
+            <label>Xác nhận mật khẩu</label>
+            <div class="input-wrap">
+              <span class="input-icon">✅</span>
+              <input class="auth-input" type="password" id="reset-confirm" placeholder="Nhập lại mật khẩu" oninput="clearFieldErr('reset-confirm-err')" onkeydown="if(event.key==='Enter')resetPassword()"/>
+            </div>
+            <span class="field-error" id="reset-confirm-err" style="display:none"></span>
+          </div>
+          <button class="auth-btn" id="reset-btn" onclick="resetPassword()">Đặt lại mật khẩu</button>
         </div>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- ===== APP ===== -->
-  <div id="app-section">
-    <div class="nav">
-      <div>
-        <h1>🤖 AI Chat SaaS</h1>
-        <p class="subtitle" id="user-email-display"></p>
+<!-- ===== APP ===== -->
+<div id="app-section">
+  <nav class="app-nav">
+    <div class="app-nav-brand">
+      <div class="brand-icon">🤖</div>
+      <span>AI Chat SaaS</span>
+    </div>
+    <div class="app-nav-right">
+      <div class="user-chip">
+        <div class="user-avatar" id="user-avatar-initials">U</div>
+        <span class="user-email" id="user-email-display"></span>
       </div>
-      <button class="btn btn-outline btn-sm" onclick="logout()">Đăng xuất</button>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">Đăng xuất</button>
     </div>
+  </nav>
 
-    <!-- MAIN TABS -->
-    <div class="tabs">
-      <div class="tab active" onclick="switchMainTab('bots')">🤖 Bots</div>
-      <div class="tab" onclick="switchMainTab('agent')">👤 Live Agent</div>
-      <div class="tab" onclick="switchMainTab('flows')">⚡ Flows</div>
-      <div class="tab" onclick="switchMainTab('contacts')">📋 Contacts</div>
-    </div>
+  <div class="main-tabs">
+    <div class="main-tab active" onclick="switchMainTab('bots')">🤖 Bots</div>
+    <div class="main-tab" onclick="switchMainTab('agent')">👤 Live Agent</div>
+    <div class="main-tab" onclick="switchMainTab('flows')">⚡ Flows</div>
+    <div class="main-tab" onclick="switchMainTab('contacts')">📋 Contacts</div>
+    <div class="main-tab" onclick="switchMainTab('account')">⚙️ Tài khoản</div>
+  </div>
+
+  <div class="container">
 
     <!-- ===== TAB: BOTS ===== -->
     <div id="main-bots" class="tab-content active">
       <div class="card">
-        <h2>➕ Tạo bot mới</h2>
+        <div class="card-title">➕ Tạo bot mới</div>
         <div id="bot-alert"></div>
         <div class="form-grid">
-          <div>
-            <label>Tên bot *</label>
-            <input id="b-name" placeholder="VD: Tư vấn bán hàng"/>
+          <div class="form-group">
+            <label>Tên bot <span class="required">*</span></label>
+            <input class="form-input" id="b-name" placeholder="VD: Tư vấn bán hàng" oninput="clearFormErr('b-name')"/>
+            <span class="form-error hidden" id="b-name-err"></span>
           </div>
-          <div>
+          <div class="form-group">
             <label>Model AI</label>
-            <select id="b-model">
+            <select class="form-input" id="b-model">
               <option value="gpt-4o-mini">GPT-4o Mini (nhanh, rẻ)</option>
               <option value="gpt-4o">GPT-4o (mạnh hơn)</option>
             </select>
           </div>
-          <div class="form-full">
-            <label>System Prompt * (tính cách, nhiệm vụ bot)</label>
-            <textarea id="b-prompt" placeholder="VD: Bạn là nhân viên tư vấn của Shop ABC, chuyên về giày thể thao. Trả lời thân thiện, ngắn gọn bằng tiếng Việt."></textarea>
+          <div class="form-group form-full">
+            <label>System Prompt <span class="required">*</span></label>
+            <textarea class="form-input" id="b-prompt" rows="4" placeholder="VD: Bạn là nhân viên tư vấn của Shop ABC, chuyên về giày thể thao. Trả lời thân thiện, ngắn gọn bằng tiếng Việt." oninput="clearFormErr('b-prompt')"></textarea>
+            <span class="form-error hidden" id="b-prompt-err"></span>
           </div>
-          <div>
+          <div class="form-group">
             <label>Màu chính</label>
-            <input type="color" id="b-color" value="#2563eb" style="height:42px;padding:4px"/>
+            <input type="color" class="form-input" id="b-color" value="#2563eb" style="height:40px;padding:4px 8px;cursor:pointer"/>
           </div>
-          <div>
+          <div class="form-group">
             <label>Icon bot</label>
-            <input id="b-avatar" value="🤖"/>
+            <input class="form-input" id="b-avatar" value="🤖"/>
           </div>
-          <div class="form-full">
+          <div class="form-group form-full">
             <label>Tin nhắn chào</label>
-            <input id="b-welcome" value="Xin chào! 👋 Tôi có thể giúp gì cho bạn?"/>
+            <input class="form-input" id="b-welcome" value="Xin chào! 👋 Tôi có thể giúp gì cho bạn?"/>
           </div>
-          <div class="form-full">
-            <label>ℹ️ Thông tin doanh nghiệp (để bot tự động sales)</label>
-            <textarea id="b-bizinfo" rows="5" placeholder="Tên công ty: Công ty ABC&#10;Dịch vụ: Thiết kế website, SEO, quảng cáo&#10;Hotline: 0901 234 567&#10;Zalo: 0901 234 567&#10;Email: contact@abc.com&#10;Địa chỉ: 123 Nguyễn Văn Linh, Q.7, HCM&#10;Ưu đãi: Giảm 20% khách hàng mới"></textarea>
-            <p style="font-size:12px;color:#94a3b8;margin-top:4px">💡 Bot sẽ tự nhiên dẫn dắt sales khi khách hỏi về dịch vụ/liên hệ.</p>
+          <div class="form-group form-full">
+            <label>Thông tin doanh nghiệp (để bot tự động sales)</label>
+            <textarea class="form-input" id="b-bizinfo" rows="5" placeholder="Tên công ty: Công ty ABC&#10;Dịch vụ: Thiết kế website, SEO, quảng cáo&#10;Hotline: 0901 234 567&#10;Zalo: 0901 234 567&#10;Email: contact@abc.com&#10;Địa chỉ: 123 Nguyễn Văn Linh, Q.7, HCM&#10;Ưu đãi: Giảm 20% khách hàng mới"></textarea>
+            <span class="form-hint">💡 Bot sẽ tự nhiên dẫn dắt sales khi khách hỏi về dịch vụ/liên hệ.</span>
           </div>
-          <div>
+          <div class="form-group">
             <label>Vị trí widget</label>
-            <select id="b-position">
+            <select class="form-input" id="b-position">
               <option value="right">Góc phải</option>
               <option value="left">Góc trái</option>
             </select>
           </div>
-          <div>
-            <label>Max tokens</label>
-            <input type="number" id="b-tokens" value="500" min="100" max="2000"/>
+          <div class="form-group">
+            <label>Max tokens <span class="form-hint" style="display:inline">(100–2000)</span></label>
+            <input type="number" class="form-input" id="b-tokens" value="500" min="100" max="2000"/>
           </div>
         </div>
-        <div style="margin-top:16px">
-          <button class="btn" onclick="createBot()">🚀 Tạo bot & lấy script</button>
+        <div style="margin-top:20px">
+          <button class="btn btn-primary" id="create-bot-btn" onclick="createBot()">🚀 Tạo bot & lấy script</button>
         </div>
       </div>
 
       <div class="card">
-        <h2>📋 Danh sách bot của bạn</h2>
-        <div id="bots-list"><p style="color:#94a3b8;font-size:14px">Đang tải...</p></div>
+        <div class="card-title">📋 Danh sách bot của bạn</div>
+        <div id="bots-list"><div class="empty-state"><div class="empty-icon">⏳</div><p>Đang tải...</p></div></div>
       </div>
     </div>
 
     <!-- ===== TAB: LIVE AGENT ===== -->
     <div id="main-agent" class="tab-content">
-      <div class="card" style="padding-bottom:8px">
-        <h2>👤 Live Agent — Trả lời thay AI</h2>
+      <div class="card" style="padding-bottom:16px">
+        <div class="card-title">👤 Live Agent — Trả lời thay AI</div>
         <div class="bot-selector">
-          <label style="margin:0;white-space:nowrap">Chọn bot:</label>
-          <select id="agent-bot-select" onchange="initAgentSocket()">
+          <label>Chọn bot:</label>
+          <select class="form-input" id="agent-bot-select" onchange="initAgentSocket()">
             <option value="">-- Chọn bot --</option>
           </select>
-          <span id="agent-status" style="font-size:13px;color:#94a3b8"></span>
+          <span id="agent-status" class="text-sm text-muted"></span>
         </div>
       </div>
-
       <div class="agent-layout">
-        <!-- Session list -->
         <div class="session-list">
-          <div class="session-list-header">
-            <span>💬 Cuộc trò chuyện</span>
-            <span id="session-count" style="font-size:12px;color:#94a3b8">0</span>
+          <div class="session-list-hd">
+            <span>Cuộc trò chuyện</span>
+            <span id="session-count" class="text-sm text-muted">0</span>
           </div>
           <div id="session-list-body">
-            <div style="padding:20px;text-align:center;color:#94a3b8;font-size:13px">
-              Chọn bot để xem sessions
-            </div>
+            <div style="padding:24px;text-align:center;color:var(--text-3);font-size:13px">Chọn bot để xem sessions</div>
           </div>
         </div>
-
-        <!-- Chat panel -->
         <div class="chat-panel">
-          <div class="chat-panel-header">
+          <div class="chat-panel-hd">
             <div>
-              <div id="cp-title" style="font-weight:600;font-size:14px">Chọn một cuộc trò chuyện</div>
-              <div id="cp-contact" style="font-size:12px;color:#64748b;margin-top:2px"></div>
+              <div id="cp-title" style="font-weight:700;font-size:14px">Chọn một cuộc trò chuyện</div>
+              <div class="contact-mini" id="cp-contact"></div>
             </div>
-            <div class="flex" id="cp-actions" style="display:none!important"></div>
+            <div class="flex" id="cp-actions"></div>
           </div>
           <div class="chat-panel-messages" id="cp-messages">
             <div class="no-session">
-              <span style="font-size:32px">💬</span>
-              <span>Chọn session để xem và trả lời</span>
+              <div style="font-size:40px">💬</div>
+              <p>Chọn session để xem và trả lời</p>
             </div>
           </div>
-          <div class="chat-panel-foot" id="cp-foot" style="display:none">
-            <input id="agent-input" placeholder="Nhập tin nhắn với tư cách nhân viên..." 
-              onkeydown="if(event.key==='Enter')sendAgentMsg()"
-              style="flex:1"/>
-            <button class="btn btn-sm btn-warning" onclick="releaseSession()" title="Trả về cho AI">🤖 Trả AI</button>
-            <button class="btn btn-sm" onclick="sendAgentMsg()">Gửi</button>
+          <div class="chat-panel-foot hidden" id="cp-foot">
+            <input class="form-input" id="agent-input" placeholder="Nhập tin nhắn với tư cách nhân viên..." onkeydown="if(event.key==='Enter')sendAgentMsg()" style="flex:1"/>
+            <button class="btn btn-warning btn-sm" onclick="releaseSession()">🤖 Trả AI</button>
+            <button class="btn btn-primary btn-sm" onclick="sendAgentMsg()">Gửi</button>
           </div>
         </div>
       </div>
@@ -289,45 +977,80 @@
     <!-- ===== TAB: FLOWS ===== -->
     <div id="main-flows" class="tab-content">
       <div class="card">
-        <h2>⚡ Flow Builder — Tự động hóa hội thoại</h2>
+        <div class="card-title">⚡ Flow Builder — Tự động hóa hội thoại</div>
         <div class="bot-selector">
-          <label style="margin:0;white-space:nowrap">Chọn bot:</label>
-          <select id="flow-bot-select" onchange="loadFlows()">
+          <label>Chọn bot:</label>
+          <select class="form-input" id="flow-bot-select" onchange="loadFlows()">
             <option value="">-- Chọn bot --</option>
           </select>
         </div>
         <div id="flow-alert"></div>
-
-        <!-- Tạo flow mới -->
         <div id="flow-creator" style="display:none">
-          <div style="display:flex;gap:10px;margin-bottom:16px;align-items:flex-end">
-            <div style="flex:1"><label>Tên flow mới</label><input id="fl-name" placeholder="VD: Flow đặt lịch hẹn"/></div>
-            <button class="btn btn-sm" onclick="createFlow()">➕ Tạo Flow</button>
+          <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:16px">
+            <div class="form-group" style="flex:1">
+              <label>Tên flow mới</label>
+              <input class="form-input" id="fl-name" placeholder="VD: Flow đặt lịch hẹn"/>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="createFlow()">➕ Tạo Flow</button>
           </div>
         </div>
-
-        <div id="flows-list"><p style="color:#94a3b8;font-size:14px">Chọn bot để xem flows.</p></div>
+        <div id="flows-list"><p class="text-muted text-sm">Chọn bot để xem flows.</p></div>
       </div>
     </div>
 
     <!-- ===== TAB: CONTACTS ===== -->
     <div id="main-contacts" class="tab-content">
       <div class="card">
-        <h2>📋 Contacts — Thông tin khách thu thập được</h2>
+        <div class="card-title">📋 Contacts — Thông tin khách thu thập được</div>
         <div class="bot-selector">
-          <label style="margin:0;white-space:nowrap">Chọn bot:</label>
-          <select id="contacts-bot-select" onchange="loadContacts()">
+          <label>Chọn bot:</label>
+          <select class="form-input" id="contacts-bot-select" onchange="loadContacts()">
             <option value="">-- Chọn bot --</option>
           </select>
         </div>
-        <div id="contacts-table-wrap">
-          <p style="color:#94a3b8;font-size:14px">Chọn bot để xem contacts.</p>
+        <div id="contacts-table-wrap"><p class="text-muted text-sm">Chọn bot để xem contacts.</p></div>
+      </div>
+    </div>
+
+    <!-- ===== TAB: ACCOUNT ===== -->
+    <div id="main-account" class="tab-content">
+      <div class="card" style="max-width:480px">
+        <div class="card-title">🔑 Đổi mật khẩu</div>
+        <div id="chpwd-alert"></div>
+        <div class="form-grid" style="grid-template-columns:1fr">
+          <div class="form-group">
+            <label>Mật khẩu hiện tại <span class="required">*</span></label>
+            <input class="form-input" type="password" id="chpwd-current" placeholder="••••••••" oninput="clearFormErr('chpwd-current')"/>
+            <span class="form-error hidden" id="chpwd-current-err"></span>
+          </div>
+          <div class="form-group">
+            <label>Mật khẩu mới <span class="required">*</span></label>
+            <input class="form-input" type="password" id="chpwd-new" placeholder="Tối thiểu 8 ký tự" oninput="checkAppPwdStrength(this.value);clearFormErr('chpwd-new')"/>
+            <div class="pwd-strength" id="app-pwd-strength" style="display:none;margin-top:6px">
+              <div class="pwd-bars" style="--bar-bg:var(--border)">
+                <div id="apb1" style="flex:1;height:3px;border-radius:2px;background:var(--border);transition:background .3s"></div>
+                <div id="apb2" style="flex:1;height:3px;border-radius:2px;background:var(--border);transition:background .3s"></div>
+                <div id="apb3" style="flex:1;height:3px;border-radius:2px;background:var(--border);transition:background .3s"></div>
+                <div id="apb4" style="flex:1;height:3px;border-radius:2px;background:var(--border);transition:background .3s"></div>
+              </div>
+              <span class="form-hint" id="app-pwd-label" style="margin-top:3px"></span>
+            </div>
+            <span class="form-error hidden" id="chpwd-new-err"></span>
+          </div>
+          <div class="form-group">
+            <label>Xác nhận mật khẩu mới <span class="required">*</span></label>
+            <input class="form-input" type="password" id="chpwd-confirm" placeholder="Nhập lại mật khẩu mới" oninput="clearFormErr('chpwd-confirm')"/>
+            <span class="form-error hidden" id="chpwd-confirm-err"></span>
+          </div>
+        </div>
+        <div style="margin-top:20px">
+          <button class="btn btn-primary" onclick="changePassword()">💾 Cập nhật mật khẩu</button>
         </div>
       </div>
     </div>
 
-  </div><!-- /app-section -->
-</div><!-- /container -->
+  </div><!-- /container -->
+</div><!-- /app-section -->
 
 <script>
 const API = window.location.origin;
@@ -338,38 +1061,190 @@ let agentSocket = null;
 let currentSessionId = null;
 let currentAgentBotId = null;
 
-if (token) showApp();
+// ===== INIT =====
+(function init() {
+  // Kiểm tra nếu đang ở trang reset-password
+  const urlParams = new URLSearchParams(window.location.search);
+  const resetToken = urlParams.get('token');
+  if (resetToken && window.location.pathname === '/reset-password') {
+    showAllViews('view-reset');
+    verifyResetToken(resetToken);
+    return;
+  }
+  if (token) showApp();
+})();
+
+// ===== VIEW SWITCHER =====
+function showAllViews(viewId) {
+  ['view-login','view-register','view-forgot','view-reset'].forEach(id => {
+    document.getElementById(id).style.display = id === viewId ? 'block' : 'none';
+  });
+}
+function showView(name) {
+  const map = {login:'view-login', register:'view-register', forgot:'view-forgot', reset:'view-reset'};
+  showAllViews(map[name]);
+}
+
+function switchAuthTab(t) {
+  if (t === 'login') showView('login');
+  else showView('register');
+}
+
+// ===== FIELD ERROR HELPERS =====
+function showFieldErr(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = '⚠ ' + msg;
+  el.style.display = 'flex';
+  // Mark input
+  const inputId = id.replace('-err','').replace('-email','').replace('-pwd','').replace('-password','').replace('-confirm','');
+}
+
+function clearFieldErr(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'none';
+}
+
+function showFormErr(id, msg) {
+  const el = document.getElementById(id + '-err');
+  if (!el) return;
+  el.textContent = '⚠ ' + msg;
+  el.classList.remove('hidden');
+  const inp = document.getElementById(id);
+  if (inp) inp.classList.add('error');
+}
+
+function clearFormErr(id) {
+  const el = document.getElementById(id + '-err');
+  if (el) el.classList.add('hidden');
+  const inp = document.getElementById(id);
+  if (inp) inp.classList.remove('error');
+}
+
+function showAppAlert(id, msg, type='error') {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = `<div class="alert alert-${type}"><span class="alert-icon">${type==='error'?'❌':type==='success'?'✅':'ℹ️'}</span><span>${msg}</span></div>`;
+  if (type !== 'success') setTimeout(() => el.innerHTML = '', 5000);
+}
+
+function showAuthAlert(id, msg, type='error') {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = `<div class="auth-alert ${type==='success'?'success':''}">${type==='success'?'✅ ':'⚠️ '}${msg}</div>`;
+}
+
+function clearAuthAlert(id) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = '';
+}
+
+function handleApiErrors(errors, fieldMap) {
+  // fieldMap: { serverKey: 'client-err-id' }
+  Object.keys(errors).forEach(key => {
+    const errId = fieldMap[key];
+    if (errId) showFieldErr(errId, errors[key]);
+  });
+}
+
+// ===== PASSWORD STRENGTH =====
+function calcStrength(pwd) {
+  let score = 0;
+  if (pwd.length >= 8) score++;
+  if (pwd.length >= 12) score++;
+  if (/[A-Z]/.test(pwd)) score++;
+  if (/[0-9]/.test(pwd)) score++;
+  if (/[^A-Za-z0-9]/.test(pwd)) score++;
+  return Math.min(4, score);
+}
+
+function renderPwdBars(prefix, score, labelId) {
+  const labels = ['','Yếu','Trung bình','Khá','Mạnh'];
+  const colors = ['','#ef4444','#f59e0b','#3b82f6','#22c55e'];
+  for (let i = 1; i <= 4; i++) {
+    const bar = document.getElementById(prefix + i);
+    if (!bar) continue;
+    bar.style.background = i <= score ? colors[score] : '';
+    bar.className = 'pwd-bar';
+  }
+  const lbl = document.getElementById(labelId);
+  if (lbl) { lbl.textContent = labels[score] || ''; lbl.style.color = colors[score] || ''; }
+}
+
+function checkPwdStrength(val) {
+  const str = document.getElementById('pwd-strength');
+  if (!str) return;
+  str.style.display = val ? 'block' : 'none';
+  renderPwdBars('pb', calcStrength(val), 'pwd-label');
+}
+
+function checkResetPwdStrength(val) {
+  const str = document.getElementById('reset-pwd-strength');
+  if (!str) return;
+  str.style.display = val ? 'block' : 'none';
+  renderPwdBars('rpb', calcStrength(val), 'reset-pwd-label');
+}
+
+function checkAppPwdStrength(val) {
+  const str = document.getElementById('app-pwd-strength');
+  if (!str) return;
+  str.style.display = val ? 'flex' : 'none';
+  str.style.flexDirection = 'column';
+  const score = calcStrength(val);
+  const colors = ['','#ef4444','#f59e0b','#3b82f6','#22c55e'];
+  const labels = ['','Yếu','Trung bình','Khá','Mạnh'];
+  for (let i = 1; i <= 4; i++) {
+    const bar = document.getElementById('apb' + i);
+    if (bar) bar.style.background = i <= score ? colors[score] : 'var(--border)';
+  }
+  const lbl = document.getElementById('app-pwd-label');
+  if (lbl) { lbl.textContent = labels[score] || ''; lbl.style.color = colors[score]; }
+}
 
 // ===== AUTH =====
 function showApp() {
   document.getElementById('auth-section').style.display = 'none';
   document.getElementById('app-section').style.display = 'block';
   document.getElementById('user-email-display').textContent = userEmail || '';
+  const initials = (userEmail || 'U').charAt(0).toUpperCase();
+  document.getElementById('user-avatar-initials').textContent = initials;
   loadBots();
 }
 
-function alert_(id, msg, type='error') {
-  const el = document.getElementById(id);
-  el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
-  setTimeout(() => el.innerHTML = '', 4000);
-}
-
-function switchAuthTab(t) {
-  document.querySelectorAll('#auth-section .tab').forEach((el,i) =>
-    el.classList.toggle('active', (t==='login'?0:1)===i));
-  document.getElementById('tab-login').classList.toggle('active', t==='login');
-  document.getElementById('tab-register').classList.toggle('active', t==='register');
-}
-
 async function register() {
-  const email = document.getElementById('reg-email').value;
+  clearAuthAlert('reg-alert');
+  clearFieldErr('reg-email-err');
+  clearFieldErr('reg-pwd-err');
+
+  const email = document.getElementById('reg-email').value.trim();
   const password = document.getElementById('reg-password').value;
+
+  // Client-side validation
+  let hasError = false;
+  if (!email) { showFieldErr('reg-email-err', 'Email là bắt buộc'); hasError = true; }
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showFieldErr('reg-email-err', 'Định dạng email không hợp lệ'); hasError = true; }
+  if (!password) { showFieldErr('reg-pwd-err', 'Mật khẩu là bắt buộc'); hasError = true; }
+  else if (password.length < 8) { showFieldErr('reg-pwd-err', 'Mật khẩu phải có ít nhất 8 ký tự'); hasError = true; }
+  if (hasError) return;
+
+  const btn = document.getElementById('reg-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Đang tạo tài khoản...';
+
   const r = await fetch(API+'/api/auth/register', {
     method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({email,password})
+    body: JSON.stringify({email, password})
   });
   const d = await r.json();
-  if (d.error) return alert_('auth-alert', d.error);
+  btn.disabled = false;
+  btn.textContent = 'Tạo tài khoản';
+
+  if (d.errors) {
+    handleApiErrors(d.errors, { email: 'reg-email-err', password: 'reg-pwd-err' });
+    return;
+  }
+  if (d.error) { showAuthAlert('reg-alert', d.error); return; }
+
   token = d.token; userEmail = d.user.email;
   localStorage.setItem('ai_saas_token', token);
   localStorage.setItem('ai_saas_email', userEmail);
@@ -377,31 +1252,196 @@ async function register() {
 }
 
 async function login() {
-  const email = document.getElementById('login-email').value;
+  clearAuthAlert('auth-alert');
+  clearFieldErr('login-email-err');
+  clearFieldErr('login-pwd-err');
+
+  const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
+
+  let hasError = false;
+  if (!email) { showFieldErr('login-email-err', 'Email là bắt buộc'); hasError = true; }
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showFieldErr('login-email-err', 'Định dạng email không hợp lệ'); hasError = true; }
+  if (!password) { showFieldErr('login-pwd-err', 'Mật khẩu là bắt buộc'); hasError = true; }
+  if (hasError) return;
+
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Đang đăng nhập...';
+
   const r = await fetch(API+'/api/auth/login', {
     method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({email,password})
+    body: JSON.stringify({email, password})
   });
   const d = await r.json();
-  if (d.error) return alert_('auth-alert', d.error);
+  btn.disabled = false;
+  btn.textContent = 'Đăng nhập';
+
+  if (d.errors) {
+    handleApiErrors(d.errors, { email: 'login-email-err', password: 'login-pwd-err' });
+    return;
+  }
+  if (d.error) { showAuthAlert('auth-alert', d.error); return; }
+
   token = d.token; userEmail = d.user.email;
   localStorage.setItem('ai_saas_token', token);
   localStorage.setItem('ai_saas_email', userEmail);
   showApp();
 }
 
+async function sendForgotPwd() {
+  clearAuthAlert('forgot-alert');
+  clearFieldErr('forgot-email-err');
+
+  const email = document.getElementById('forgot-email').value.trim();
+
+  if (!email) { showFieldErr('forgot-email-err', 'Email là bắt buộc'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showFieldErr('forgot-email-err', 'Định dạng email không hợp lệ'); return; }
+
+  const btn = document.getElementById('forgot-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Đang gửi...';
+
+  const r = await fetch(API+'/api/auth/forgot-password', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({email})
+  });
+  const d = await r.json();
+  btn.disabled = false;
+  btn.textContent = 'Gửi link đặt lại mật khẩu';
+
+  if (d.errors) { handleApiErrors(d.errors, { email: 'forgot-email-err' }); return; }
+  if (d.error) { showAuthAlert('forgot-alert', d.error); return; }
+
+  showAuthAlert('forgot-alert', d.message || 'Email đã được gửi! Vui lòng kiểm tra hộp thư.', 'success');
+  document.getElementById('forgot-email').value = '';
+}
+
+async function verifyResetToken(rawToken) {
+  document.getElementById('reset-token-checking').style.display = 'block';
+  document.getElementById('reset-form').style.display = 'none';
+
+  const r = await fetch(`${API}/api/auth/verify-reset-token?token=${encodeURIComponent(rawToken)}`);
+  const d = await r.json();
+
+  document.getElementById('reset-token-checking').style.display = 'none';
+
+  if (!d.valid) {
+    showAuthAlert('reset-alert', d.error || 'Link không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu link mới.');
+    return;
+  }
+
+  document.getElementById('reset-form').style.display = 'block';
+  window._resetToken = rawToken;
+
+  if (d.expiresInMinutes <= 5) {
+    showAuthAlert('reset-alert', `⏳ Link sẽ hết hạn sau ${d.expiresInMinutes} phút. Hãy đặt lại ngay!`, 'success');
+    document.querySelector('.auth-alert.success').style.background = 'rgba(245,158,11,0.15)';
+    document.querySelector('.auth-alert.success').style.color = '#fbbf24';
+  }
+}
+
+async function resetPassword() {
+  clearAuthAlert('reset-alert');
+  clearFieldErr('reset-pwd-err');
+  clearFieldErr('reset-confirm-err');
+
+  const password = document.getElementById('reset-password').value;
+  const confirmPassword = document.getElementById('reset-confirm').value;
+  const rawToken = window._resetToken;
+
+  let hasError = false;
+  if (!password) { showFieldErr('reset-pwd-err', 'Mật khẩu mới là bắt buộc'); hasError = true; }
+  else if (password.length < 8) { showFieldErr('reset-pwd-err', 'Mật khẩu phải có ít nhất 8 ký tự'); hasError = true; }
+  if (!confirmPassword) { showFieldErr('reset-confirm-err', 'Vui lòng xác nhận mật khẩu'); hasError = true; }
+  else if (password !== confirmPassword) { showFieldErr('reset-confirm-err', 'Mật khẩu xác nhận không khớp'); hasError = true; }
+  if (hasError) return;
+
+  const btn = document.getElementById('reset-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Đang xử lý...';
+
+  const r = await fetch(API+'/api/auth/reset-password', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({token: rawToken, password, confirmPassword})
+  });
+  const d = await r.json();
+  btn.disabled = false;
+  btn.textContent = 'Đặt lại mật khẩu';
+
+  if (d.errors) {
+    handleApiErrors(d.errors, {
+      token: 'reset-token-err',
+      password: 'reset-pwd-err',
+      confirmPassword: 'reset-confirm-err'
+    });
+    return;
+  }
+  if (d.error) { showAuthAlert('reset-alert', d.error); return; }
+
+  showAuthAlert('reset-alert', d.message || 'Đặt lại mật khẩu thành công!', 'success');
+  document.getElementById('reset-form').style.display = 'none';
+
+  setTimeout(() => {
+    window.history.pushState({}, '', '/');
+    showView('login');
+    showAuthAlert('auth-alert', 'Mật khẩu đã được đặt lại. Hãy đăng nhập!', 'success');
+  }, 2500);
+}
+
 function logout() {
   if (agentSocket) agentSocket.disconnect();
-  localStorage.clear(); token = null;
-  document.getElementById('auth-section').style.display = 'block';
+  localStorage.clear();
+  token = null; userEmail = null;
+  document.getElementById('auth-section').style.display = 'flex';
   document.getElementById('app-section').style.display = 'none';
+  showView('login');
+}
+
+// ===== CHANGE PASSWORD (logged in) =====
+async function changePassword() {
+  ['chpwd-current','chpwd-new','chpwd-confirm'].forEach(clearFormErr);
+  clearAuthAlert('chpwd-alert');
+  showAppAlert('chpwd-alert', '', 'info'); // clear
+
+  const currentPassword = document.getElementById('chpwd-current').value;
+  const newPassword     = document.getElementById('chpwd-new').value;
+  const confirmPassword = document.getElementById('chpwd-confirm').value;
+
+  let hasError = false;
+  if (!currentPassword) { showFormErr('chpwd-current', 'Mật khẩu hiện tại là bắt buộc'); hasError = true; }
+  if (!newPassword) { showFormErr('chpwd-new', 'Mật khẩu mới là bắt buộc'); hasError = true; }
+  else if (newPassword.length < 8) { showFormErr('chpwd-new', 'Mật khẩu phải có ít nhất 8 ký tự'); hasError = true; }
+  if (!confirmPassword) { showFormErr('chpwd-confirm', 'Vui lòng xác nhận mật khẩu'); hasError = true; }
+  else if (newPassword !== confirmPassword) { showFormErr('chpwd-confirm', 'Mật khẩu xác nhận không khớp'); hasError = true; }
+  if (hasError) return;
+
+  const r = await fetch(API+'/api/auth/change-password', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    body: JSON.stringify({currentPassword, newPassword, confirmPassword})
+  });
+  const d = await r.json();
+
+  if (d.errors) {
+    if (d.errors.currentPassword) showFormErr('chpwd-current', d.errors.currentPassword);
+    if (d.errors.newPassword) showFormErr('chpwd-new', d.errors.newPassword);
+    if (d.errors.confirmPassword) showFormErr('chpwd-confirm', d.errors.confirmPassword);
+    return;
+  }
+  if (d.error) { showAppAlert('chpwd-alert', d.error); return; }
+
+  document.getElementById('chpwd-current').value = '';
+  document.getElementById('chpwd-new').value = '';
+  document.getElementById('chpwd-confirm').value = '';
+  document.getElementById('app-pwd-strength').style.display = 'none';
+  showAppAlert('chpwd-alert', d.message || 'Đổi mật khẩu thành công!', 'success');
 }
 
 // ===== MAIN TABS =====
 function switchMainTab(name) {
-  document.querySelectorAll('#app-section > .tabs .tab').forEach((el,i) => {
-    const names = ['bots','agent','flows','contacts'];
+  document.querySelectorAll('.main-tab').forEach((el, i) => {
+    const names = ['bots','agent','flows','contacts','account'];
     el.classList.toggle('active', names[i] === name);
   });
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -419,6 +1459,7 @@ async function loadBots() {
 function populateBotSelectors() {
   ['agent-bot-select','flow-bot-select','contacts-bot-select'].forEach(id => {
     const sel = document.getElementById(id);
+    if (!sel) return;
     const cur = sel.value;
     sel.innerHTML = '<option value="">-- Chọn bot --</option>' +
       allBots.map(b => `<option value="${b.id}" ${b.id===cur?'selected':''}>${b.bot_avatar} ${b.name}</option>`).join('');
@@ -428,40 +1469,58 @@ function populateBotSelectors() {
 function renderBotsList() {
   const el = document.getElementById('bots-list');
   if (!allBots.length) {
-    el.innerHTML = '<p style="color:#94a3b8;font-size:14px">Chưa có bot nào. Tạo bot đầu tiên phía trên!</p>';
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🤖</div><p>Chưa có bot nào.</p><small>Tạo bot đầu tiên phía trên!</small></div>`;
     return;
   }
   el.innerHTML = allBots.map(bot => `
     <div class="bot-card">
       <div class="bot-card-header">
-        <div>
-          <span style="font-size:20px">${bot.bot_avatar}</span>
-          <span class="bot-name" style="margin-left:8px">${bot.name}</span>
-          <span class="tag ${bot.is_active?'tag-active':'tag-inactive'}" style="margin-left:8px">
-            ${bot.is_active?'Hoạt động':'Tắt'}
-          </span>
+        <div class="bot-card-info">
+          <div class="bot-avatar-chip" style="background:${bot.primary_color}22;border-color:${bot.primary_color}44">${bot.bot_avatar}</div>
+          <div>
+            <div class="bot-name">${escHtml(bot.name)}
+              <span class="badge ${bot.is_active?'badge-active':'badge-inactive'}" style="margin-left:6px">
+                <span class="badge-dot"></span>${bot.is_active?'Hoạt động':'Tắt'}
+              </span>
+            </div>
+            <div class="bot-meta">ID: ${bot.id} · ${bot.model}</div>
+          </div>
         </div>
         <div class="flex">
-          <button class="btn btn-sm btn-outline" onclick="toggleBot('${bot.id}',${bot.is_active})">
-            ${bot.is_active?'Tắt':'Bật'}
-          </button>
-          <button class="btn btn-sm btn-danger" onclick="deleteBot('${bot.id}')">Xoá</button>
+          <button class="btn btn-outline btn-sm" onclick="toggleBot('${bot.id}',${bot.is_active})">${bot.is_active?'Tắt':'Bật'}</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteBot('${bot.id}')">Xoá</button>
         </div>
       </div>
-      <div class="bot-id">ID: ${bot.id} | Model: ${bot.model}</div>
-      <div class="flex" style="margin-top:10px;gap:8px">
-        <button class="btn btn-sm btn-outline" onclick="getScript('${bot.id}',this)">📋 Embed Script</button>
-        <a href="/preview/${bot.id}" target="_blank" class="btn btn-sm btn-success" style="text-decoration:none">▶ Test Widget</a>
+      <div class="bot-card-body">
+        <div class="bot-actions">
+          <button class="btn btn-outline btn-sm" onclick="getScript('${bot.id}',this)">📋 Embed Script</button>
+          <a href="/preview/${bot.id}" target="_blank" class="btn btn-success btn-sm">▶ Test Widget</a>
+        </div>
+        <div id="script-${bot.id}" style="display:none"></div>
       </div>
-      <div id="script-${bot.id}" style="display:none"></div>
     </div>
   `).join('');
 }
 
 async function createBot() {
+  ['b-name','b-prompt'].forEach(clearFormErr);
+  clearAuthAlert('bot-alert');
+
+  const name = document.getElementById('b-name').value.trim();
+  const system_prompt = document.getElementById('b-prompt').value.trim();
+
+  let hasError = false;
+  if (!name) { showFormErr('b-name', 'Tên bot là bắt buộc'); hasError = true; }
+  if (!system_prompt) { showFormErr('b-prompt', 'System prompt là bắt buộc'); hasError = true; }
+  if (hasError) return;
+
+  const btn = document.getElementById('create-bot-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Đang tạo...';
+
   const data = {
-    name: document.getElementById('b-name').value,
-    system_prompt: document.getElementById('b-prompt').value,
+    name,
+    system_prompt,
     primary_color: document.getElementById('b-color').value,
     bot_avatar: document.getElementById('b-avatar').value,
     welcome_message: document.getElementById('b-welcome').value,
@@ -470,16 +1529,24 @@ async function createBot() {
     max_tokens: parseInt(document.getElementById('b-tokens').value),
     business_info: document.getElementById('b-bizinfo').value
   };
-  if (!data.name || !data.system_prompt)
-    return alert_('bot-alert', 'Vui lòng nhập tên và system prompt');
+
   const r = await fetch(API+'/api/bots', {
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
     body: JSON.stringify(data)
   });
   const d = await r.json();
-  if (d.error) return alert_('bot-alert', d.error);
-  alert_('bot-alert', '✅ Tạo bot thành công!', 'success');
+  btn.disabled = false;
+  btn.textContent = '🚀 Tạo bot & lấy script';
+
+  if (d.errors) {
+    if (d.errors.name) showFormErr('b-name', d.errors.name);
+    if (d.errors.system_prompt) showFormErr('b-prompt', d.errors.system_prompt);
+    return;
+  }
+  if (d.error) { showAppAlert('bot-alert', d.error); return; }
+
+  showAppAlert('bot-alert', '✅ Tạo bot thành công!', 'success');
   loadBots();
 }
 
@@ -491,20 +1558,21 @@ async function getScript(botId, btn) {
   div.style.display = 'block';
   div.innerHTML = `
     <div class="script-box" id="sbox-${botId}">${escHtml(d.script)}<button class="copy-btn" onclick="copyScript('${botId}')">Copy</button></div>
-    <p style="font-size:12px;color:#64748b;margin-top:6px">👆 Dán đoạn script này vào trước thẻ &lt;/body&gt; của website.</p>
+    <p class="form-hint" style="margin-top:8px">👆 Dán đoạn script này vào trước thẻ &lt;/body&gt; của website.</p>
   `;
 }
 
 function copyScript(botId) {
-  const text = document.getElementById('sbox-'+botId).innerText.replace('Copy','').trim();
+  const text = document.getElementById('sbox-'+botId).innerText.replace(/Copy$/,'').trim();
   navigator.clipboard.writeText(text).then(() => {
-    document.querySelector(`#sbox-${botId} .copy-btn`).textContent = '✓ Đã copy!';
-    setTimeout(() => document.querySelector(`#sbox-${botId} .copy-btn`).textContent = 'Copy', 2000);
+    const btn = document.querySelector(`#sbox-${botId} .copy-btn`);
+    btn.textContent = '✓ Đã copy!';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
   });
 }
 
 function escHtml(t) {
-  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 async function toggleBot(id, current) {
@@ -517,7 +1585,7 @@ async function toggleBot(id, current) {
 }
 
 async function deleteBot(id) {
-  if (!confirm('Xoá bot này?')) return;
+  if (!confirm('Xoá bot này? Tất cả dữ liệu chat sẽ bị xoá vĩnh viễn.')) return;
   await fetch(API+'/api/bots/'+id, {method:'DELETE', headers:{Authorization:'Bearer '+token}});
   loadBots();
 }
@@ -533,42 +1601,37 @@ function initAgentSocket() {
 
   agentSocket = io();
   agentSocket.emit('operator:join', { token, botId });
-  document.getElementById('agent-status').innerHTML = '<span class="online-dot"></span>Đang kết nối...';
+  document.getElementById('agent-status').innerHTML = '<span class="online-dot" style="display:inline-block"></span> Đang kết nối...';
 
   agentSocket.on('sessions:list', sessions => {
-    document.getElementById('agent-status').innerHTML = '<span class="online-dot"></span>Đã kết nối';
+    document.getElementById('agent-status').innerHTML = '<span class="online-dot" style="display:inline-block"></span> Đã kết nối';
     renderSessionList(sessions);
   });
 
   agentSocket.on('message:new', data => {
-    // Cập nhật session list
     refreshSessionList();
-    // Nếu đang xem session này thì append message
-    if (data.sessionId === currentSessionId) {
-      appendChatMessage(data.role, data.content);
-    } else {
-      // Badge notify
+    if (data.sessionId === currentSessionId) appendChatMessage(data.role, data.content);
+    else {
       const item = document.querySelector(`.session-item[data-id="${data.sessionId}"]`);
-      if (item && data.role === 'user') {
-        item.style.background = '#fef9c3';
-      }
+      if (item && data.role === 'user') item.style.background = '#fef9c3';
     }
   });
 
-  agentSocket.on('contact:updated', function(data) {
-  // Cập nhật contact trong session list
-  const item = document.querySelector(`.session-item[data-id="${data.sessionId}"]`);
-  if (item && data.contact.phone) {
-    const phoneEl = item.querySelector('.session-phone');
-    if (phoneEl) phoneEl.textContent = '📞 ' + data.contact.phone;
-    else item.insertAdjacentHTML('beforeend', `<div class="session-phone" style="font-size:11px;color:#64748b;margin-top:2px">📞 ${data.contact.phone}</div>`);
-  }
-  // Nếu đang mở tab Contacts thì reload luôn
-  const contactsTab = document.getElementById('main-contacts');
-  if (contactsTab && contactsTab.classList.contains('active')) {
-    loadContacts();
-  }
-});
+  agentSocket.on('contact:updated', data => {
+    const item = document.querySelector(`.session-item[data-id="${data.sessionId}"]`);
+    if (item && data.contact.phone) {
+      let phoneEl = item.querySelector('.session-phone');
+      if (!phoneEl) {
+        phoneEl = document.createElement('div');
+        phoneEl.className = 'session-phone';
+        phoneEl.style.cssText = 'font-size:11px;color:var(--text-3);margin-top:3px';
+        item.appendChild(phoneEl);
+      }
+      phoneEl.textContent = '📞 ' + data.contact.phone;
+    }
+    const contactsTab = document.getElementById('main-contacts');
+    if (contactsTab && contactsTab.classList.contains('active')) loadContacts();
+  });
 
   agentSocket.on('session:history', ({sessionId, messages, contact}) => {
     currentSessionId = sessionId;
@@ -584,30 +1647,28 @@ function renderSessionList(sessions) {
   const el = document.getElementById('session-list-body');
   document.getElementById('session-count').textContent = sessions.length;
   if (!sessions.length) {
-    el.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8;font-size:13px">Chưa có cuộc trò chuyện</div>';
+    el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-3);font-size:13px">Chưa có cuộc trò chuyện</div>';
     return;
   }
   el.innerHTML = sessions.map(s => `
     <div class="session-item ${s.operator_mode?'operator':''} ${s.id===currentSessionId?'active':''}"
       data-id="${s.id}" onclick="viewSession('${s.id}')">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
-        <div class="session-name">
-          ${s.contact_name || '👤 Khách #'+s.id.slice(0,6)}
-          ${s.operator_mode?'<span class="tag tag-operator" style="margin-left:4px">Agent</span>':''}
-        </div>
-        <span class="session-time">${formatTime(s.created_at)}</span>
+      <div class="session-item-name">
+        ${escHtml(s.contact_name || '👤 Khách #'+s.id.slice(0,6))}
+        ${s.operator_mode?'<span class="badge badge-operator" style="margin-left:4px">Agent</span>':''}
       </div>
-      <div class="session-preview">${s.last_message||s.first_message||'...'}</div>
-      ${s.contact_phone?`<div style="font-size:11px;color:#64748b;margin-top:2px">📞 ${s.contact_phone}</div>`:''}
+      <div class="session-item-preview">${escHtml(s.last_message||s.first_message||'...')}</div>
+      <div class="session-item-meta">
+        ${s.contact_phone?`<span>📞 ${s.contact_phone}</span>`:''}
+        <span>${formatTime(s.created_at)}</span>
+      </div>
     </div>
   `).join('');
 }
 
 async function refreshSessionList() {
   if (!currentAgentBotId) return;
-  const r = await fetch(API+`/api/bots/${currentAgentBotId}/conversations`, {
-    headers:{Authorization:'Bearer '+token}
-  });
+  const r = await fetch(API+`/api/bots/${currentAgentBotId}/conversations`, {headers:{Authorization:'Bearer '+token}});
   const sessions = await r.json();
   renderSessionList(sessions);
 }
@@ -615,7 +1676,6 @@ async function refreshSessionList() {
 function viewSession(sessionId) {
   if (!agentSocket) return;
   agentSocket.emit('session:view', { sessionId });
-  // highlight
   document.querySelectorAll('.session-item').forEach(el => {
     el.classList.toggle('active', el.dataset.id === sessionId);
     if (el.dataset.id === sessionId) el.style.background = '';
@@ -624,65 +1684,60 @@ function viewSession(sessionId) {
 
 function renderChatPanel(sessionId, messages, contact) {
   document.getElementById('cp-title').textContent = contact?.name || '👤 Khách #'+sessionId.slice(0,6);
-  
-  // Contact info
   const parts = [];
   if (contact?.phone) parts.push('📞 '+contact.phone);
   if (contact?.email) parts.push('✉️ '+contact.email);
-  document.getElementById('cp-contact').textContent = parts.join(' · ') || 'Chưa thu thập thông tin';
+  document.getElementById('cp-contact').innerHTML = parts.map(p=>`<span>${p}</span>`).join('') || '<span class="text-muted">Chưa có thông tin liên hệ</span>';
 
-  // Actions
   const actions = document.getElementById('cp-actions');
-  const session = document.querySelector(`.session-item[data-id="${sessionId}"]`);
-  const isOperator = session?.classList.contains('operator');
-  actions.style.display = 'flex';
+  const sessionEl = document.querySelector(`.session-item[data-id="${sessionId}"]`);
+  const isOperator = sessionEl?.classList.contains('operator');
   actions.innerHTML = isOperator
-    ? `<span style="font-size:12px;color:#ca8a04;font-weight:600">🟡 Đang handle</span>
-       <button class="btn btn-sm btn-warning" onclick="releaseSession()">🤖 Trả AI</button>`
-    : `<button class="btn btn-sm btn-success" onclick="takeoverSession('${sessionId}')">✋ Nhận handle</button>`;
+    ? `<span class="badge badge-operator"><span class="badge-dot"></span>Đang handle</span>
+       <button class="btn btn-warning btn-sm" onclick="releaseSession()">🤖 Trả AI</button>`
+    : `<button class="btn btn-success btn-sm" onclick="takeoverSession('${sessionId}')">✋ Nhận handle</button>`;
 
-  // Messages
   const msgEl = document.getElementById('cp-messages');
   msgEl.innerHTML = '';
   messages.forEach(m => appendChatMessage(m.role, m.content, false));
   msgEl.scrollTop = msgEl.scrollHeight;
 
-  // Footer
   const foot = document.getElementById('cp-foot');
-  foot.style.display = isOperator ? 'flex' : 'none';
+  if (isOperator) foot.classList.remove('hidden');
+  else foot.classList.add('hidden');
 }
 
 function appendChatMessage(role, content, scroll=true) {
   const el = document.getElementById('cp-messages');
-  const div = document.createElement('div');
   const labels = {user:'👤 Khách', assistant:'🤖 AI', operator:'👨‍💼 Nhân viên'};
   const cls = {user:'msg-user', assistant:'msg-assistant', operator:'msg-operator'};
-  div.innerHTML = `
+  const wrap = document.createElement('div');
+  wrap.className = 'msg-wrap';
+  wrap.style.alignItems = role === 'operator' ? 'flex-end' : 'flex-start';
+  wrap.innerHTML = `
     <div class="msg-label">${labels[role]||role}</div>
     <div class="msg-bubble ${cls[role]||'msg-user'}">${escHtml(content)}</div>
   `;
-  div.style.display='flex';div.style.flexDirection='column';
-  div.style.alignItems = role==='operator'?'flex-end':'flex-start';
-  el.appendChild(div);
+  el.appendChild(wrap);
   if (scroll) el.scrollTop = el.scrollHeight;
 }
 
 function takeoverSession(sessionId) {
   if (!agentSocket) return;
   agentSocket.emit('operator:takeover', { sessionId });
-  document.getElementById('cp-foot').style.display = 'flex';
-  const actions = document.getElementById('cp-actions');
-  actions.innerHTML = `<span style="font-size:12px;color:#ca8a04;font-weight:600">🟡 Đang handle</span>
-    <button class="btn btn-sm btn-warning" onclick="releaseSession()">🤖 Trả AI</button>`;
+  document.getElementById('cp-foot').classList.remove('hidden');
+  document.getElementById('cp-actions').innerHTML = `
+    <span class="badge badge-operator"><span class="badge-dot"></span>Đang handle</span>
+    <button class="btn btn-warning btn-sm" onclick="releaseSession()">🤖 Trả AI</button>`;
   refreshSessionList();
 }
 
 function releaseSession() {
   if (!agentSocket || !currentSessionId) return;
   agentSocket.emit('operator:release', { sessionId: currentSessionId });
-  document.getElementById('cp-foot').style.display = 'none';
-  const actions = document.getElementById('cp-actions');
-  actions.innerHTML = `<button class="btn btn-sm btn-success" onclick="takeoverSession('${currentSessionId}')">✋ Nhận handle</button>`;
+  document.getElementById('cp-foot').classList.add('hidden');
+  document.getElementById('cp-actions').innerHTML = `
+    <button class="btn btn-success btn-sm" onclick="takeoverSession('${currentSessionId}')">✋ Nhận handle</button>`;
   refreshSessionList();
 }
 
@@ -707,54 +1762,52 @@ async function loadFlows() {
 function renderFlows(flows, botId) {
   const el = document.getElementById('flows-list');
   if (!flows.length) {
-    el.innerHTML = '<p style="color:#94a3b8;font-size:14px;margin-top:8px">Chưa có flow nào. Tạo flow đầu tiên!</p>';
+    el.innerHTML = `<div class="empty-state" style="padding:32px 0"><div class="empty-icon">⚡</div><p>Chưa có flow nào.</p><small>Tạo flow đầu tiên!</small></div>`;
     return;
   }
   el.innerHTML = flows.map(flow => `
     <div class="flow-card">
-      <div class="flow-card-header">
-        <div>
-          <span style="font-weight:600;font-size:14px">⚡ ${flow.name}</span>
-          <span class="tag ${flow.is_active?'tag-active':'tag-inactive'}" style="margin-left:8px">
-            ${flow.is_active?'Bật':'Tắt'}
+      <div class="flow-card-hd">
+        <div class="flex">
+          <span style="font-weight:700;font-size:14px">⚡ ${escHtml(flow.name)}</span>
+          <span class="badge ${flow.is_active?'badge-active':'badge-inactive'}">
+            <span class="badge-dot"></span>${flow.is_active?'Bật':'Tắt'}
           </span>
         </div>
         <div class="flex">
-          <button class="btn btn-sm btn-outline" onclick="toggleFlow('${flow.id}',${flow.is_active})">
-            ${flow.is_active?'Tắt':'Bật'}
-          </button>
-          <button class="btn btn-sm btn-danger" onclick="deleteFlow('${flow.id}')">Xoá</button>
+          <button class="btn btn-outline btn-sm" onclick="toggleFlow('${flow.id}',${flow.is_active})">${flow.is_active?'Tắt':'Bật'}</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteFlow('${flow.id}')">Xoá</button>
         </div>
       </div>
-      <div class="node-list" id="nodes-${flow.id}">
-        ${renderNodes(flow.nodes, flow.id)}
-      </div>
-      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-sm btn-outline" onclick="addNode('${flow.id}','trigger')">➕ Trigger</button>
-        <button class="btn btn-sm btn-outline" onclick="addNode('${flow.id}','send_message')">➕ Gửi tin</button>
-        <button class="btn btn-sm btn-outline" onclick="addNode('${flow.id}','collect_info')">➕ Thu thập info</button>
-        <button class="btn btn-sm btn-outline" onclick="addNode('${flow.id}','ai_reply')">➕ AI trả lời</button>
+      <div class="flow-card-body">
+        <div class="node-list">${renderNodes(flow.nodes, flow.id)}</div>
+        <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-outline btn-sm" onclick="addNode('${flow.id}','trigger')">➕ Trigger</button>
+          <button class="btn btn-outline btn-sm" onclick="addNode('${flow.id}','send_message')">➕ Gửi tin</button>
+          <button class="btn btn-outline btn-sm" onclick="addNode('${flow.id}','collect_info')">➕ Thu thập info</button>
+          <button class="btn btn-outline btn-sm" onclick="addNode('${flow.id}','ai_reply')">➕ AI trả lời</button>
+        </div>
       </div>
     </div>
   `).join('');
 }
 
 function renderNodes(nodes, flowId) {
-  if (!nodes.length) return '<p style="font-size:13px;color:#94a3b8">Chưa có node. Thêm node bên dưới.</p>';
+  if (!nodes.length) return '<p class="text-muted text-sm">Chưa có node. Thêm node bên dưới.</p>';
+  const typeLabels = {trigger:'Trigger',send_message:'Gửi tin',collect_info:'Thu thập',ai_reply:'AI Reply'};
+  const typeCls    = {trigger:'node-trigger',send_message:'node-message',collect_info:'node-collect',ai_reply:'node-ai'};
   return nodes.map((node, idx) => {
-    const typeLabels = {trigger:'Trigger',send_message:'Gửi tin',collect_info:'Thu thập',ai_reply:'AI Reply'};
-    const typeClass  = {trigger:'node-trigger',send_message:'node-message',collect_info:'node-collect',ai_reply:'node-ai'};
     let detail = '';
-    if (node.type==='trigger')      detail = `Keywords: <b>${node.config?.keywords||'(chưa đặt)'}</b>`;
-    if (node.type==='send_message') detail = `Tin: <b>${node.config?.message||'(chưa đặt)'}</b>`;
-    if (node.type==='collect_info') detail = `Thu: <b>${node.config?.fields||'name,phone,email'}</b>`;
-    if (node.type==='ai_reply')     detail = `AI với prompt tùy chỉnh`;
+    if (node.type==='trigger')      detail = `Keywords: <b>${escHtml(node.config?.keywords||'(chưa đặt)')}</b>`;
+    if (node.type==='send_message') detail = `Tin: <b>${escHtml(node.config?.message||'(chưa đặt)')}</b>`;
+    if (node.type==='collect_info') detail = `Thu: <b>${escHtml(node.config?.fields||'name,phone,email')}</b>`;
+    if (node.type==='ai_reply')     detail = 'AI với prompt tùy chỉnh';
     return `
       <div class="node-item">
-        <span class="node-type ${typeClass[node.type]||''}">${typeLabels[node.type]||node.type}</span>
+        <span class="node-badge ${typeCls[node.type]||''}">${typeLabels[node.type]||node.type}</span>
         <span style="font-size:13px;flex:1">${detail}</span>
-        <button class="btn btn-sm btn-outline" onclick="editNode('${flowId}',${idx})" style="padding:4px 10px">✏️</button>
-        <button class="btn btn-sm btn-danger" onclick="removeNode('${flowId}',${idx})" style="padding:4px 10px">✕</button>
+        <button class="btn btn-outline btn-xs" onclick="editNode('${flowId}',${idx})">✏️</button>
+        <button class="btn btn-danger btn-xs" onclick="removeNode('${flowId}',${idx})">✕</button>
       </div>
     `;
   }).join('');
@@ -763,10 +1816,9 @@ function renderNodes(nodes, flowId) {
 async function createFlow() {
   const botId = document.getElementById('flow-bot-select').value;
   const name  = document.getElementById('fl-name').value.trim();
-  if (!botId || !name) return alert_('flow-alert','Nhập tên flow');
+  if (!botId || !name) { showAppAlert('flow-alert', 'Vui lòng nhập tên flow'); return; }
   await fetch(API+`/api/bots/${botId}/flows`, {
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
     body: JSON.stringify({name, nodes:[]})
   });
   document.getElementById('fl-name').value = '';
@@ -775,8 +1827,7 @@ async function createFlow() {
 
 async function toggleFlow(id, current) {
   await fetch(API+`/api/flows/${id}`, {
-    method:'PUT',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    method:'PUT', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
     body: JSON.stringify({is_active: current?0:1})
   });
   loadFlows();
@@ -788,22 +1839,17 @@ async function deleteFlow(id) {
   loadFlows();
 }
 
-// Edit node inline
-const nodeEditors = {};
-
 async function addNode(flowId, type) {
   const config = await promptNodeConfig(type);
   if (!config) return;
   const botId = document.getElementById('flow-bot-select').value;
-  // Lấy nodes hiện tại
   const r = await fetch(API+`/api/bots/${botId}/flows`, {headers:{Authorization:'Bearer '+token}});
   const flows = await r.json();
   const flow  = flows.find(f => f.id === flowId);
   if (!flow) return;
   flow.nodes.push({ type, config });
   await fetch(API+`/api/flows/${flowId}`, {
-    method:'PUT',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    method:'PUT', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
     body: JSON.stringify({nodes: flow.nodes})
   });
   loadFlows();
@@ -815,13 +1861,11 @@ async function editNode(flowId, idx) {
   const flows = await r.json();
   const flow  = flows.find(f => f.id === flowId);
   if (!flow) return;
-  const node = flow.nodes[idx];
-  const config = await promptNodeConfig(node.type, node.config);
+  const config = await promptNodeConfig(flow.nodes[idx].type, flow.nodes[idx].config);
   if (!config) return;
   flow.nodes[idx].config = config;
   await fetch(API+`/api/flows/${flowId}`, {
-    method:'PUT',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    method:'PUT', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
     body: JSON.stringify({nodes: flow.nodes})
   });
   loadFlows();
@@ -835,8 +1879,7 @@ async function removeNode(flowId, idx) {
   if (!flow) return;
   flow.nodes.splice(idx, 1);
   await fetch(API+`/api/flows/${flowId}`, {
-    method:'PUT',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    method:'PUT', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
     body: JSON.stringify({nodes: flow.nodes})
   });
   loadFlows();
@@ -845,31 +1888,43 @@ async function removeNode(flowId, idx) {
 function promptNodeConfig(type, existing={}) {
   return new Promise(resolve => {
     const overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99999;display:flex;align-items:center;justify-content:center';
+    overlay.className = 'modal-overlay';
     const templates = {
-      trigger: `<label>Keywords kích hoạt (cách nhau bằng dấu phẩy)</label>
-        <input id="nc-keywords" placeholder="đặt lịch, book, hẹn, demo, tư vấn" value="${existing?.keywords||''}"/>
-        <p style="font-size:12px;color:#94a3b8;margin-top:4px">Khi khách nhắn chứa 1 trong các keyword → flow được kích hoạt</p>`,
-      send_message: `<label>Nội dung tin nhắn tự động</label>
-        <textarea id="nc-message" rows="4" placeholder="VD: Cảm ơn bạn đã quan tâm! Để đặt lịch tư vấn, vui lòng cho mình biết tên và số điện thoại nhé 😊">${existing?.message||''}</textarea>`,
-      collect_info: `<label>Các trường cần thu thập</label>
-        <input id="nc-fields" value="${existing?.fields||'name,phone,email'}" placeholder="name,phone,email"/>
-        <p style="font-size:12px;color:#94a3b8;margin-top:4px">Bot sẽ khéo léo hỏi các thông tin này trong cuộc trò chuyện</p>`,
-      ai_reply: `<label>Custom prompt cho node này (tùy chọn)</label>
-        <textarea id="nc-prompt" rows="3" placeholder="VD: Hỏi thêm thông tin về yêu cầu của khách, sau đó xác nhận lịch hẹn">${existing?.prompt||''}</textarea>`
+      trigger: `
+        <div class="form-group">
+          <label>Keywords kích hoạt <span style="font-size:11px;color:var(--text-3)">(cách nhau bằng dấu phẩy)</span></label>
+          <input class="form-input" id="nc-keywords" placeholder="đặt lịch, book, hẹn, demo, tư vấn" value="${escHtml(existing?.keywords||'')}"/>
+          <span class="form-hint">Khi khách nhắn chứa 1 trong các keyword → flow được kích hoạt</span>
+        </div>`,
+      send_message: `
+        <div class="form-group">
+          <label>Nội dung tin nhắn tự động</label>
+          <textarea class="form-input" id="nc-message" rows="4" placeholder="VD: Cảm ơn bạn đã quan tâm! Để đặt lịch tư vấn, vui lòng cho mình biết tên và số điện thoại nhé 😊">${escHtml(existing?.message||'')}</textarea>
+        </div>`,
+      collect_info: `
+        <div class="form-group">
+          <label>Các trường cần thu thập</label>
+          <input class="form-input" id="nc-fields" value="${escHtml(existing?.fields||'name,phone,email')}" placeholder="name,phone,email"/>
+          <span class="form-hint">Bot sẽ khéo léo hỏi các thông tin này trong cuộc trò chuyện</span>
+        </div>`,
+      ai_reply: `
+        <div class="form-group">
+          <label>Custom prompt cho node này <span style="font-size:11px;color:var(--text-3)">(tùy chọn)</span></label>
+          <textarea class="form-input" id="nc-prompt" rows="3" placeholder="VD: Hỏi thêm thông tin về yêu cầu của khách, sau đó xác nhận lịch hẹn">${escHtml(existing?.prompt||'')}</textarea>
+        </div>`
     };
+    const typeLabels = {trigger:'Trigger',send_message:'Gửi tin',collect_info:'Thu thập info',ai_reply:'AI Reply'};
     overlay.innerHTML = `
-      <div style="background:#fff;border-radius:16px;padding:24px;max-width:440px;width:90%;font-family:inherit">
-        <h3 style="margin-bottom:16px;font-size:15px">⚙️ Cấu hình node: ${type}</h3>
-        <div style="display:flex;flex-direction:column;gap:10px">${templates[type]||''}</div>
-        <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end">
-          <button onclick="this.closest('[style*=fixed]').remove();window._nodeResolve(null)" 
-            style="padding:8px 18px;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer;font-size:14px;background:#fff">Huỷ</button>
-          <button onclick="window._saveNode('${type}')" 
-            style="padding:8px 18px;background:#2563eb;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600">Lưu</button>
+      <div class="modal">
+        <div class="modal-title">⚙️ Cấu hình: ${typeLabels[type]||type}</div>
+        ${templates[type]||''}
+        <div class="modal-actions">
+          <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove();window._nodeResolve(null)">Huỷ</button>
+          <button class="btn btn-primary" onclick="window._saveNode('${type}')">Lưu</button>
         </div>
       </div>`;
     document.body.appendChild(overlay);
+    overlay.addEventListener('click', e => { if (e.target === overlay) { overlay.remove(); resolve(null); } });
     window._nodeResolve = resolve;
     window._saveNode = (type) => {
       const cfg = {};
@@ -891,8 +1946,9 @@ async function loadContacts() {
   const sessions = await r.json();
   const wrap = document.getElementById('contacts-table-wrap');
   const withContact = sessions.filter(s => s.contact_name||s.contact_phone||s.contact_email);
+
   if (!withContact.length) {
-    wrap.innerHTML = '<div class="empty-state">📭 Chưa thu thập được thông tin liên hệ nào.<br><small>Bot sẽ tự động hỏi khi cơ hội phù hợp.</small></div>';
+    wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>Chưa thu thập được thông tin liên hệ nào.</p><small>Bot sẽ tự động hỏi khi cơ hội phù hợp.</small></div>`;
     return;
   }
   wrap.innerHTML = `
@@ -903,17 +1959,17 @@ async function loadContacts() {
       <tbody>
         ${withContact.map(s => `
           <tr>
-            <td>${s.contact_name||'<span style="color:#cbd5e1">—</span>'}</td>
-            <td>${s.contact_phone?`<a href="tel:${s.contact_phone}">${s.contact_phone}</a>`:'<span style="color:#cbd5e1">—</span>'}</td>
-            <td>${s.contact_email?`<a href="mailto:${s.contact_email}">${s.contact_email}</a>`:'<span style="color:#cbd5e1">—</span>'}</td>
-            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.first_message||'...'}</td>
-            <td style="text-align:center">${s.message_count}</td>
-            <td>${formatTime(s.created_at)}</td>
+            <td>${s.contact_name?escHtml(s.contact_name):'<span class="text-muted">—</span>'}</td>
+            <td>${s.contact_phone?`<a href="tel:${s.contact_phone}">${escHtml(s.contact_phone)}</a>`:'<span class="text-muted">—</span>'}</td>
+            <td>${s.contact_email?`<a href="mailto:${s.contact_email}">${escHtml(s.contact_email)}</a>`:'<span class="text-muted">—</span>'}</td>
+            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(s.first_message||'...')}</td>
+            <td style="text-align:center;font-weight:600">${s.message_count}</td>
+            <td class="text-muted">${formatTime(s.created_at)}</td>
           </tr>
         `).join('')}
       </tbody>
     </table>
-    <p style="font-size:12px;color:#94a3b8;margin-top:12px">📊 ${withContact.length} / ${sessions.length} cuộc trò chuyện đã thu thập được thông tin</p>
+    <p class="form-hint" style="margin-top:12px">📊 ${withContact.length} / ${sessions.length} cuộc trò chuyện đã có thông tin liên hệ</p>
   `;
 }
 
@@ -921,8 +1977,7 @@ async function loadContacts() {
 function formatTime(ts) {
   if (!ts) return '';
   const d = new Date(ts * 1000);
-  const now = new Date();
-  const diff = (now - d) / 1000;
+  const diff = (Date.now() - d) / 1000;
   if (diff < 60)   return 'Vừa xong';
   if (diff < 3600) return Math.floor(diff/60)+'p trước';
   if (diff < 86400)return Math.floor(diff/3600)+'h trước';
